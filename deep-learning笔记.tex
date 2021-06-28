@@ -42,7 +42,7 @@
 
   \quad 2. 一层hidden layer计算方法：$ f^{(i)}(x; W, c) = \sigma (W^Tx + c)$
 
-  \quad \quad x 为前一层的输出向量，输入层x即为参数向量。 
+  \quad \quad x 为前一层的输出向量，输入层x即为训练参数向量。 
 
   \quad \quad c 为此层常数向量
 
@@ -54,4 +54,17 @@
 
   \quad \quad $XW$ 当W对参数集矩阵操作时，每行向量$z_{i}^T$此时为一层hidden layer各节点对第i参数点的中间值向量。对每行+$c^T$并分别取$\sigma $得到输出矩阵，$a_{ij}$为当使用第i个参数点时此层第j节点的输出
 
+  \textbf{cross entropy}
+
+  \quad 分部p 和 分部q 间的 cross entropy $H(p, q) = -E_p(\log (q))$。为 expected value of $log (q)$ with respect to distribution p
+
+  \textbf{cost function}
+
+  \quad 当使用maximum likelihood估计参数时，cost function$J(\theta )$为 训练输入参数的分部 和 训练结果参数的分部 间cross-entropy
+  
+  \quad $J(\theta ) = -E_{x, y\sim training\_dataset}(log (p_{model}(y | x)))$
+
+  \quad \quad 对于每一在训练集内的(x, y)，求$log (p_{model}(y | x))$， 并求expected value。$p_{model}(y | x)$ 即训练得到的y关于x的分部
+
+  \quad \quad 例：$J(\theta) = -E_{x, y\sim data}(y - f(x;\theta))^2 + const$，当model为$y = N(f(x; \theta), 1)$正则分部时
 \end{document}
