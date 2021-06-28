@@ -1,0 +1,57 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry}
+\geometry{a4paper,scale=0.8}
+\sectionfont{\bfseries\Large\raggedright}
+
+\title{deep-learning笔记}
+\author{徐世桐}
+\date{}
+\begin{document}
+\maketitle
+
+\section{Chapter 6}
+
+\noindent \textbf{SVM支持向量机}
+
+  仍通过$w^Tx+b$得到输出，输出仅表示identity，正值说明有identity，负值说明没有
+
+  依据：一个平面的公式为$\beta_0+\beta_1x_1+\beta_2x_2=0$，则当计算$w^Tx+b$得到值后，>0则为平面上方的数据点，<0为下方数据点\\
+\textbf{kernel trick}
+
+  kernel method将数据集表示成相近的两个数据点一组的集合$(x_i, x_j)$，kernel method将一对数据变为单一数据点$x=k(x_i, x_j)=\langle \phi (x_i), \phi (x_j)\rangle $
+
+  kernel method使用$\phi $转换数据的纬度，而点乘 化简后无需先计算$\phi (x_i), \phi (x_j)$即可得到新数据点$x$\\
+\textbf{manifold hypothesis:}
+
+  当训练数据集合包含大量无规律的数据，则将其中大部分视为无效数据，并只关心落在一个manifold上的数据。
+
+  例：生成图像 文字 声音时数据大多很集中，当像素文字随机分布时生成图像大多无意义\\
+\textbf{deep feedforward network/feedforward neural network/multilayer perceptrons MLP：}
+
+  找到$\theta$使得$f(x; \theta )$ 最接近数据y值。$f^*$为最理想的f，即$f^*(x) = y$。$\theta $可为多个参数，如$f(x; w, b) = x^Tw+b$
+
+  $f^*(x) = f^{(3)}(f^{(2)}(f^{(1)}(x)))$，$f^{(1)}$为network第一层。每一$f^{(i)}(x) = \phi (x; \theta )^Tw$
+
+  \textbf{神经网络}
+
+  \quad 1. 结构：
+
+  \quad \quad 输入层没有weight，第一hidden layer得到所有输入层的值。
+
+  \quad \quad hidden layer和输出层所有输出都为0/1，非连续的值
+
+  \quad 2. 一层hidden layer计算方法：$ f^{(i)}(x; W, c) = \sigma (W^Tx + c)$
+
+  \quad \quad x 为前一层的输出向量，输入层x即为参数向量。 
+
+  \quad \quad c 为此层常数向量
+
+  \quad \quad z = $W^Tx$为一层hidden layer对输入取得的中间值向量，a = $\sigma (z + c)$为对z + c每一元素取$\sigma $的结果向量，a即此层的输出。
+
+  \quad \quad W 为此层参数矩阵，行数 = 前层节点数，列数 = 当前层节点数
+
+  \quad \quad X 为多个参数点的训练集中前一层的输出矩阵，行数为数据点个数，列数为前一层节点数
+
+  \quad \quad $XW$ 当W对参数集矩阵操作时，每行向量$z_{i}^T$此时为一层hidden layer各节点对第i参数点的中间值向量。对每行+$c^T$并分别取$\sigma $得到输出矩阵，$a_{ij}$为当使用第i个参数点时此层第j节点的输出
+
+\end{document}
