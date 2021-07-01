@@ -1,5 +1,7 @@
 \documentclass[UTF8]{ctexart}
 \usepackage{geometry}
+\usepackage{graphicx} %插入图片的宏包
+\usepackage{float} %设置图片浮动位置的宏包
 \geometry{a4paper,scale=0.8}
 \sectionfont{\bfseries\Large\raggedright}
 
@@ -46,7 +48,7 @@
 
   \quad \quad c 为此层常数向量
 
-  \quad \quad z = $W^Tx$为一层hidden layer对输入取得的中间值向量，a = $\sigma (z + c)$为对z + c每一元素取$\sigma $的结果向量，a即此层的输出。
+  \quad \quad z = $W^Tx$为一层hidden layer对输入取得的中间值向量，称logit。a = $\sigma (z + c)$为对z + c每一元素取$\sigma $的结果向量，a即此层的输出。
 
   \quad \quad W 为此层参数矩阵，行数 = 前层节点数，列数 = 当前层节点数
 
@@ -60,11 +62,59 @@
 
   \textbf{cost function}
 
-  \quad 当使用maximum likelihood估计参数时，cost function$J(\theta )$为 训练输入参数的分部 和 训练结果参数的分部 间cross-entropy
-  
-  \quad $J(\theta ) = -E_{x, y\sim training\_dataset}(log (p_{model}(y | x)))$
+  \quad 当使用maximum likelihood估计参数时，cost function$J(\theta )$为 训练输入参数的分部 和 训练结果参数的分部 间cross-entropy： $J(\theta ) = -E_{x, y\sim training\_dataset}(log (p_{model}(y | x)))$
 
   \quad \quad 对于每一在训练集内的(x, y)，求$log (p_{model}(y | x))$， 并求expected value。$p_{model}(y | x)$ 即训练得到的y关于x的分部
 
-  \quad \quad 例：$J(\theta) = -E_{x, y\sim data}(y - f(x;\theta))^2 + const$，当model为$y = N(f(x; \theta), 1)$正则分部时
+  \quad \quad 例：当model为$y = N(f(x; \theta), 1)$正则分部时，$J(\theta) = -E_{x, y\sim data}(y - f(x;\theta))^2 + const$
+
+  \textbf{output layer}
+
+  \quad 当输出层的结果和不为1时，代表数据没有被准确分到某一类中，使用exponentiation and normalisation
+
+  \quad \quad normalisation后结果 $p = \frac{\tilde{p} }{\sum \tilde{p'} } $，为$\tilde{p} $在所有结果中占的比例。$\tilde{p} $为未normalise 值
+
+  \quad 假设输出层结果$\tilde{P} (y | x)$ 有 $log(\tilde{P} (y | x)) = yz$
+
+  \quad \quad $\tilde{P} (y | x) = exp(yz)$
+
+  \quad \quad $P (y | x) = \frac{exp(yz)}{\sum_{y' = 0}^{1} y'z } $，称\textbf{softmax function}
+
+  \quad \quad $P (y | x) = \sigma ((2y - 1)z)$，y，y'为训练目标结果，所以$\sum_{y' = 0}^{1} $包含所有y'
+
+  \quad 对softmax function使用log likelihood原因：log $softmax(z)_i = z_i - log\sum_j exp(z_j)$。
+
+  \quad \quad 当$z_i$为dominant，并对应期望的输出项。log $softmax(z)_i$ = 0。则此项不产生高cost，否则产生cost。
+
+  \textbf{hidden unit}
+
+  \quad \quad 代表一个hidden layer节点的激发函数。
+
+  \quad \quad 1. rectified linear unit: $g(x) = max(0, x)$
+
+  \quad \quad \quad 无法用于gradient based learning，由于一阶导为0
+
+  \quad \quad \quad 基于rectified linear unit的优化：$g(x) = max(0, x) + a*min(0, x)$
+
+  \quad \quad \quad \quad a = -1：absolute value rectifier
+
+  \quad \quad \quad \quad a 为极小值：leaky ReLU
+
+  \quad \quad \quad \quad a 为可学习值：Parametric ReLU, PReLU
+
+  \quad \quad 2. Maxout units
+
+  \quad \quad \quad 将x分为多组，每组h(x) 为组内最高值
+
+  \textbf{backward propagation}
+
+  \quad 一种计算gradient的方法，区别于使用gradient进行学习的stochastic gradient descent
+
+  \quad 算法：
+  \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+    \centering %图片居中
+    \includegraphics[width=0.6\textwidth]{note_images/backprop_algo.png} %插入图片，[]中设置图片大小，{}中是图片文件名
+  \end{figure}
+
+  
 \end{document}
