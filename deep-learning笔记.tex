@@ -1,5 +1,6 @@
 \documentclass[UTF8]{ctexart}
 \usepackage{geometry}
+\usepackage{amsmath}
 \usepackage{graphicx} %插入图片的宏包
 \usepackage{float} %设置图片浮动位置的宏包
 \geometry{a4paper,scale=0.8}
@@ -11,8 +12,61 @@
 \begin{document}
 \maketitle
 
-\section{Chapter 6}
+\section{基本定义}
+\noindent \textbf{label标签}：输出结果，$\hat{y} $为计算得到的结果，$y$为实际测量结果\\
+\textbf{feature特征}：用于预测标签的输入变量，$x^{(i)}_j$为第i组sample第j号特征\\
+\textbf{sample样本}：一组特征的取值和对应的标签输出，样本编号集合称$B$\\
+\textbf{hyperparameter超参数}：人为设定的参数。如样本个数（批量大小batch size）$|B|$，学习率$\eta $。少数情况下通过学习得到\\
+\textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接
+\textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正 2. 值总和为1
+\textbf{cross entropy交叉熵}
 
+  定义：分部p 和 分部q 间的 cross entropy $H(p, q) = -E_p(\log (q))$。为 expected value of $log (q)$ with respect to distribution p
+
+  公式：$H(y^{(i)}, \hat{y}^{(i)}) = -\sum_{j\in B}y^{(i)}log(\hat{y}^{(i)})$
+
+  使用：联系两个值概率分部间的差异，即可将数值输出$\hat{y}$和分类结果$y$直接做对比，无需softmax
+
+
+\section{linear regression线性回归}
+\noindent \textbf{平方代价函数}：$J(\theta ) = \frac{1}{n} \sum_{i = 1}^{n} J^{(i)}(\theta )$，为所有样本误差的平均值\\
+\textbf{迭代}：$\theta_i = \theta_i - \frac{\eta}{|B|}\sum_{i\in B} \frac{d J^{(i)}(\theta)}{d \theta_i}$，即对所有sample训练一次，得到label差值，对每一参数减 斜率*学习率 的平均值
+  
+  当使用平方代价函数：
+  
+  \quad $\theta_i = \theta_i - \frac{\eta}{|B|}\sum_{i\in B} x^{(j)}_i(x^{(j)}_1\theta_1 + x^{(j)}_2\theta_2 + ... + const - y^{(j)}) = \theta_i - \frac{\eta}{|B|}\sum_{i\in B}x^{(i)}(\hat{y}^{(j)} - y^{(j)})$
+
+  \quad $const = const - \frac{\eta}{|B|}\sum_{i\in B} (x^{(j)}_1\theta_1 + x^{(j)}_2\theta_2 + ... + const - y^{(i)}) = const - \frac{\eta}{|B|}\sum_{i\in B}(\hat{y}^{(j)} - y^{(j)})$
+
+  \quad 对样本i的偏导数向量为$\nabla _{\theta}J^{(i)}(\theta) = 
+    \begin{bmatrix}
+    x^{(i)}_1 \\
+    x^{(i)}_2 \\
+    ... \\
+    1
+    \end{bmatrix}(\hat{y}^{(i)} - y^{(i)})
+    $\\
+\textbf{交叉熵代价函数}：$J(\theta) = \frac{1}{|B|}\sum_{i\in B} H(y^{(i)}, \hat{y}^{(i)})$\\
+\textbf{softmax线性回归}：单层神经网络，使用softmax代价函数\\
+\textbf{过拟合问题}
+
+  \textbf{1.权重衰减}：在代价函数中惩罚高权重的值，尽可能使所有权重值减小
+
+  \quad 新代价函数 = $J(\theta) + \frac{\lambda}{2}\sum_{w\in W}w^2$，即 $J(\theta) + \frac{\lambda}{2} * $ 所有权重的平方和。$\lambda$为超参数，决定权重衰减的程度
+
+  \textbf{2.丢弃法}
+
+  \quad 每一权重（不包括const）有p的几率 $\theta' = 0$，有1-p的几率 $\theta' = \frac{\theta}{1-p}$
+
+  \quad 为了得到确切的值，在测试模型时较少使用\\
+\textbf{初始化参数}
+
+  \textbf{1.MXNet默认随机初始化}：所有权重$\sim N(0, 1)$的normal distribution，所有const取0
+
+  \textbf{2.Xavier随机初始化}：对一全连接层，输入个数a，输出个数b，则所有参数$\sim U(-\sqrt{\frac{6}{a+b}}, \sqrt{\frac{6}{a+b}})$
+
+
+\section{Deep Feedforward Network (Deep Learning 第6章笔记)}
 \noindent \textbf{SVM支持向量机}
 
   仍通过$w^Tx+b$得到输出，输出仅表示identity，正值说明有identity，负值说明没有
