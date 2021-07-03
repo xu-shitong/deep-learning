@@ -63,8 +63,12 @@
 
   \textbf{1.MXNet默认随机初始化}：所有权重$\sim N(0, 1)$的normal distribution，所有const取0
 
-  \textbf{2.Xavier随机初始化}：对一全连接层，输入个数a，输出个数b，则所有参数$\sim U(-\sqrt{\frac{6}{a+b}}, \sqrt{\frac{6}{a+b}})$
+  \textbf{2.Xavier随机初始化}：对一全连接层，输入个数a，输出个数b，则所有参数$\sim U(-\sqrt{\frac{6}{a+b}}, \sqrt{\frac{6}{a+b}})$\\
+\textbf{预处理数据集}
 
+  \textbf{1.特征标准化}：$x' = \frac{x - \mu}{\sigma}$，即统计中z值
+
+  \textbf{2.离散值转换成指示特征}：对于一个可取值为A, B, C的离散输入值，转换成3个数值输入。即如果原输入为A，转换后3个数值输入为1，0，0。原离散值为B则转换后为0，1，0
 
 \section{Deep Feedforward Network (Deep Learning 第6章笔记)}
 \noindent \textbf{SVM支持向量机}
