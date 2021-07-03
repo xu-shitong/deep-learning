@@ -1,0 +1,70 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx} %插入图片的宏包
+\usepackage{float} %设置图片浮动位置的宏包
+\geometry{a4paper,scale=0.8}
+\sectionfont{\bfseries\Large\raggedright}
+
+\title{deep-learning笔记}
+\author{徐世桐}
+\date{}
+\begin{document}
+\maketitle
+
+\section{NDArray}
+
+\noindent \texttt{from mxnet import nd}\\
+\texttt{x = nd.arange(12)} // 创建一个长度为12的行向量，类型为NDArray 12\\
+\texttt{x.shape} // 返回(m, n)，代表x为 m行n列 矩阵。对于向量，行数或列数不存在\\
+\texttt{x.size} // 返回矩阵中元素个数\\
+\texttt{x.reshape((m', n'))}
+
+  更改x的shape，元素按行填写进新矩阵/向量。如果 n' * m' < 原元素数，多余元素被舍弃。如果n' * m' > 原元素数，报错
+
+  当二次resize，使用与开始定义x的size，而非上一次resize后舍弃部分值的x.size
+  
+  只能reshape成矩阵或向量，不能reshape成张量\\
+\texttt{x.reshape((-1, n')) x.reshape((m', -1))}
+ 
+  当m', n' = -1，m' = $\lfloor \frac{x.size}{n'}\rfloor $，n'同理
+
+  当m', n'为空，reshape成向量\\
+\texttt{nd.zeros(($v_1, v_2, v_3, ..., v_n$))}
+  
+  创建一个张量，类型仍为NDArray。有$v_1$个子张量，每个子张量分别有$v_2$个子张量。最后一层张量有$v_n$元素，每一元素都为0。
+  
+  张量同样可以reshape，reshape结果只能是矩阵或向量\\
+\texttt{nd.ones(($v_1, v_2, v_3, ..., v_n$))} // 所有元素为1的张量\\
+\texttt{nd.array([...])} // 得到python list类型的矩阵，返回NDArray类型的矩阵\\
+\texttt{nd.random.normal($\mu, \sigma$， shape=($v_1, v_2, v_3, ..., v_n$))}
+
+  随机生成张量，元素值$\sim N(\mu, \sigma)$\\\\
+\texttt{X + - * / Y}
+
+  张量element-wise操作
+  
+  当X Y维数不同时，广播boardcast 机制先将X，Y按行或列复制成维数一样的张量，随后element-wise操作\\
+\texttt{X.exp()} // 张量element-wise 取指数\\
+\texttt{nd.dot(X, Y)} //矩阵乘法\\
+\texttt{nd.concat(X, Y, dim=n)}
+
+  在第n纬度将矩阵concat，除此纬度其余所有纬度必须完全一样\\
+\texttt{X == Y} 
+
+  elementwise比较张量元素，纬度必须相同\\
+\texttt{X.sum()} // 所有元素和\\
+\texttt{X.norm()}
+ 
+  得到仅包含一元素的矩阵，元素值为2-norm
+
+  可以对张量取2-norm\\
+\texttt{X.asscalar()} // 如果X仅包含一元素，输出此元素值\\
+\texttt{X[$v_1, v_2, v_3, ..., v_n$]}
+
+  index取值操作，同X$[v_1][v_2][v_3]...[v_n]$
+
+  当$v_i$为n:m时，代表范围$[n, m)$\\
+\texttt{X.asnumpy()} // 转换成python list\\
+
+\end{document}
