@@ -36,7 +36,11 @@
   
   张量同样可以reshape，reshape结果只能是矩阵或向量\\
 \texttt{nd.ones(($v_1, v_2, v_3, ..., v_n$))} // 所有元素为1的张量\\
-\texttt{nd.array([...])} // 得到python list类型的矩阵，返回NDArray类型的矩阵\\
+\texttt{nd.array([...])}
+ 
+  得到python list类型的矩阵，返回NDArray类型的矩阵
+  
+  输入可以是python常数，但随后计算会报错\\
 \texttt{nd.random.normal($\mu, \sigma$， shape=($v_1, v_2, v_3, ..., v_n$))}
 
   随机生成张量，元素值$\sim N(\mu, \sigma)$\\\\
@@ -65,6 +69,22 @@
   index取值操作，同X$[v_1][v_2][v_3]...[v_n]$
 
   当$v_i$为n:m时，代表范围$[n, m)$\\
-\texttt{X.asnumpy()} // 转换成python list\\
+\texttt{X.asnumpy()} // 转换成python list
+
+
+\section{训练}
+
+\noindent \texttt{from mxnet import autograd}\\
+\texttt{x.attach\_grad()} // 为自变量x的 $\frac{d }{d x} $项分配内存\\
+\texttt{with autograd.record():}
+
+  \texttt{因变量 = 关于x的表达式}\\
+\texttt{因变量.backward()}
+  
+  定义x的表达式，并计算表达式在x内每一元素值上的斜率，对应斜率矩阵存在x.attach\_grad()分配的内存中
+  
+  关于x的表达式可以为一个自定义function，不需要是一个连续的数学函数\\
+\texttt{x.grad} // 调取斜率矩阵\\
+\texttt{autograd.is\_training()} // 在\texttt{autograd.record()内返回true，否则返回false}\\
 
 \end{document}

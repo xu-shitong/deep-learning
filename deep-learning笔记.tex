@@ -70,6 +70,16 @@
 
   \textbf{2.离散值转换成指示特征}：对于一个可取值为A, B, C的离散输入值，转换成3个数值输入。即如果原输入为A，转换后3个数值输入为1，0，0。原离散值为B则转换后为0，1，0
 
+
+\section{convolutional neural network卷积神经网络}
+\noindent \textbf{互相关运算}：
+
+  输入一个二维数组，和\textbf{二维核kernel}进行互相关运算，得到二维数组
+
+  \textbf{二维核/卷积核/filter 过滤器}：在输入数组上滑动，每次和二维数组矩阵一部分按元素相乘，相乘结果求和作为输出矩阵的元素\\
+\textbf{二维卷积层}：
+
+  将输入和卷积核做互相关运算，结果加上const作为输出
 \section{Deep Feedforward Network (Deep Learning 第6章笔记)}
 \noindent \textbf{SVM支持向量机}
 
