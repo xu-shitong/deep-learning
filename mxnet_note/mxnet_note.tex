@@ -6,7 +6,7 @@
 \geometry{a4paper,scale=0.8}
 \sectionfont{\bfseries\Large\raggedright}
 
-\title{deep-learning笔记}
+\title{mxnet笔记}
 \author{徐世桐}
 \date{}
 \begin{document}
@@ -78,13 +78,43 @@
 \texttt{x.attach\_grad()} // 为自变量x的 $\frac{d }{d x} $项分配内存\\
 \texttt{with autograd.record():}
 
-  \texttt{因变量 = 关于x的表达式}\\
+  \texttt{因变量 = 关于x的表达式}
+  
+  - 关于x的表达式可以为一个自定义function，不需要是一个连续的数学函数
+  
+  - 自定义函数必须将所有使用的变量包括在def输入变量中，不可使用全局变量。const仍可使用全局变量
+  
+  - 当变量为另一函数的结果，需将另一函数inline进传入参数步骤，不能使用局部变量传入\\
 \texttt{因变量.backward()}
   
-  定义x的表达式，并计算表达式在x内每一元素值上的斜率，对应斜率矩阵存在x.attach\_grad()分配的内存中
+  - 定义x的表达式，并计算表达式在x内每一元素值上的斜率，对应斜率矩阵存在x.attach\_grad()分配的内存中
   
-  关于x的表达式可以为一个自定义function，不需要是一个连续的数学函数\\
+  - 当使用多组sample，因变量为向量。此时backward等同于\texttt{因变量.sum().backward()}\\
 \texttt{x.grad} // 调取斜率矩阵\\
-\texttt{autograd.is\_training()} // 在\texttt{autograd.record()内返回true，否则返回false}\\
+\texttt{autograd.is\_training()} // 在\texttt{autograd.record()内返回true，否则返回false}
+
+
+\section{使用neural network模型训练}
+
+\noindent \texttt{from mxnet.gluon import nn}\\
+\texttt{from mxnet import init}\\
+\texttt{from mxnet.gluon import loss as gloss}\\
+\texttt{net = nn.Sequential()} // 创建一个神经网络模型，不包含任何layer\\
+\texttt{net.add(nn.Dense(2))} // 在模型中加入一个全连接层，包含一个节点\\
+\texttt{net.initialize(init.Normal(sigma=0.3))} // 初始化整个神经网络，所有权重$\sim N(0, 0.3)$，所有偏差值=0\\
+\texttt{loss = gloss.L2Loss()}
+  
+  定义损失函数为平方损失函数，loss为一函数\\
+\texttt{trainer = gluon.Trainer(net.collect\_params(), 'sgd', {'learning\_rate': 0.03})}
+
+  定义每一步优化函数，使用sgd梯度下降\\
+\texttt{trainer.step(batch\_size)}
+
+  调用优化函数，取batch\_size个sample做一步训练\\
+\texttt{l = loss(net(features), labels)}
+
+  调用loss函数\\
+
+
 
 \end{document}
