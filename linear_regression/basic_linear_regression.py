@@ -36,7 +36,8 @@ LEARNING_RATE = 1
 for i in range(REGRESSION_NUM):
 
   with autograd.record():
-    loss = square_loss(labels, forward(features, w, d))
+    temp = forward(features, w, d)
+    loss = square_loss(labels, temp)
   loss.backward()
 
   sgd([w, d])

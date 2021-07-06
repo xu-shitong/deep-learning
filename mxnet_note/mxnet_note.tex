@@ -20,11 +20,9 @@
 \texttt{x.size} // 返回矩阵中元素个数\\
 \texttt{x.reshape((m', n'))}
 
-  更改x的shape，元素按行填写进新矩阵/向量。如果 n' * m' < 原元素数，多余元素被舍弃。如果n' * m' > 原元素数，报错
+  更改x的shape，元素按行填写进新张量。如果 n' * m' < 原元素数，多余元素被舍弃。如果n' * m' > 原元素数，报错
 
-  当二次resize，使用与开始定义x的size，而非上一次resize后舍弃部分值的x.size
-  
-  只能reshape成矩阵或向量，不能reshape成张量\\
+  当二次resize，使用与开始定义x的size，而非上一次resize后舍弃部分值的x.size\\
 \texttt{x.reshape((-1, n')) x.reshape((m', -1))}
  
   当m', n' = -1，m' = $\lfloor \frac{x.size}{n'}\rfloor $，n'同理
@@ -58,6 +56,24 @@
 
   elementwise比较张量元素，纬度必须相同\\
 \texttt{X.sum()} // 所有元素和\\
+\texttt{X.sum(axis=n, keepdims=True/False)}
+
+  对张量第n维的数据求和
+  
+  keepdims时shape转换：$v_1, v_2, ..., v_{n-1}, v_n, v_{n+1}, ...$ -> $v_1, v_2, ..., v_{n-1}, 1, v_{n+1}, ...$
+
+  否则，shape转换：$v_1, v_2, ..., v_{n-1}, v_n, v_{n+1}, ...$ -> $v_1, v_2, ..., v_{n-1}, v_{n+1}, ...$
+
+  例：n=0，对列求和 n=1，对行求和\\
+\texttt{X.argmax(axis=n, keepdims=Ture/False)}
+  
+  找到给定维度中最大元素的index，shape转换同上
+
+  算法：对张量$v_1, v_2, ..., v_{n-1}, v_n, v_{n+1}, ...$
+
+  \quad 结果张量包括一个$v_1, v_2, ..., v_{n-1}$张量
+
+  \quad 每一元素张量为原张量$v_n$维中所有张量的element wise比较结果。shape为$v_{n+1}, ...$，其中每一元素为一index，标记$v_n$维中此位置最大元素值所在的张量index\\
 \texttt{X.norm()}
  
   得到仅包含一元素的矩阵，元素值为2-norm
@@ -69,7 +85,11 @@
   index取值操作，同X$[v_1][v_2][v_3]...[v_n]$
 
   当$v_i$为n:m时，代表范围$[n, m)$\\
-\texttt{X.asnumpy()} // 转换成python list
+\texttt{X.asnumpy()} // 转换成python list\\\\
+\texttt{from d2lzh import plt}\\
+\texttt{plt.scatter(array\_x, array\_y, 1)}
+
+  描点，\texttt{array\_x}, \texttt{array\_y}为python list
 
 
 \section{训练}
@@ -84,7 +104,7 @@
   
   - 自定义函数必须将所有使用的变量包括在def输入变量中，不可使用全局变量。const仍可使用全局变量
   
-  - 当变量为另一函数的结果，需将另一函数inline进传入参数步骤，不能使用局部变量传入\\
+  - 当变量为另一函数的结果，计算另一函数的步骤需放进with 中，不能在with scope外计算完with内调取\\
 \texttt{因变量.backward()}
   
   - 定义x的表达式，并计算表达式在x内每一元素值上的斜率，对应斜率矩阵存在x.attach\_grad()分配的内存中
@@ -105,15 +125,46 @@
 \texttt{loss = gloss.L2Loss()}
   
   定义损失函数为平方损失函数，loss为一函数\\
-\texttt{trainer = gluon.Trainer(net.collect\_params(), 'sgd', {'learning\_rate': 0.03})}
+\texttt{trainer = gluon.Trainer(net.collect\_params(NAME), 'sgd', {'learning\_rate': 0.03}, WD)}
 
-  定义每一步优化函数，使用sgd梯度下降\\
+  定义每一步优化函数，使用sgd梯度下降
+  
+  NAME无定义，则同时训练权重
+  
+  \quad NAME = \texttt{'.*weight'}，只训练权重 
+  
+  \quad NAME = \texttt{'.*bias'}，只训练偏差
+    
+  WD无定义，则不使用权重衰减
+  
+  \quad WD = \texttt{wd:'wd'}，使用权重衰减\\
+\texttt{dataset = gdata.ArrayDataset(features, labels)}\\
+\texttt{data\_iter = gdata.DataLoader(dataset, batch\_size, shuffle=True, num\_workers)}
+
+  按批量读取数据，\texttt{num\_workers}代表使用的额外处理器数，0代表没有额外处理器\\
 \texttt{trainer.step(batch\_size)}
 
   调用优化函数，取batch\_size个sample做一步训练\\
 \texttt{l = loss(net(features), labels)}
 
-  调用loss函数\\
+  调用loss函数
+\section{图像分类数据集fashion-MINST}
+\noindent \texttt{from mxnet.gluon import data as gdata}\\
+\texttt{mnist\_train = gdata.version.FashionMINST(train=True)} 
+
+  得到数据集, \texttt{train=True}为训练数据集，否则为测试训练集\\
+\texttt{features, label = mnist\_train[i:j]}
+  
+  得到一个或多个sample
+  
+  features为(j-i, 28, 28, 1)的张量，类型为\texttt{NDArray}\\
+\texttt{from d2lzh import show\_fashion\_mnist}\\
+\texttt{show\_fashion\_mnist(features, ['label1', 'label2'])}
+
+  打印图片，显示图片仍使用plt.show()
+
+  features必须包含多余一个图片矩阵，否则报错
+
 
 
 

@@ -15,17 +15,20 @@
 \section{基本定义}
 \noindent \textbf{label标签}：输出结果，$\hat{y} $为计算得到的结果，$y$为实际测量结果\\
 \textbf{feature特征}：用于预测标签的输入变量，$x^{(i)}_j$为第i组sample第j号特征\\
-\textbf{sample样本}：一组特征的取值和对应的标签输出，样本编号集合称$B$\\
+\textbf{sample样本}：一组特征的取值和对应的标签输出\\
+\textbf{batch}：batch size个sample被分为一组，进行向量化的计算，称$B$\\
 \textbf{hyperparameter超参数}：人为设定的参数。如样本个数（批量大小batch size）$|B|$，学习率$\eta $。少数情况下通过学习得到\\
-\textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接
-\textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正 2. 值总和为1
+\textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接\\
+\textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正 2. 值总和为1\\
 \textbf{cross entropy交叉熵}
 
   定义：分部p 和 分部q 间的 cross entropy $H(p, q) = -E_p(\log (q))$。为 expected value of $log (q)$ with respect to distribution p
 
   公式：$H(y^{(i)}, \hat{y}^{(i)}) = -\sum_{j\in B}y^{(i)}log(\hat{y}^{(i)})$
 
-  使用：联系两个值概率分部间的差异，即可将数值输出$\hat{y}$和分类结果$y$直接做对比，无需softmax
+  使用：联系两个值概率分部间的差异，即可将数值输出$\hat{y}$和分类结果$y$直接做对比
+
+  \quad 仍可和softmax同时使用，softmax将可能性先转换为正数并和为1，随后使用cross entropy
 
 
 \section{linear regression线性回归}
@@ -68,7 +71,14 @@
 
   \textbf{1.特征标准化}：$x' = \frac{x - \mu}{\sigma}$，即统计中z值
 
-  \textbf{2.离散值转换成指示特征}：对于一个可取值为A, B, C的离散输入值，转换成3个数值输入。即如果原输入为A，转换后3个数值输入为1，0，0。原离散值为B则转换后为0，1，0
+  \textbf{2.离散值转换成指示特征}：对于一个可取值为A, B, C的离散输入值，转换成3个数值输入。即如果原输入为A，转换后3个数值输入为1，0，0。原离散值为B则转换后为0，1，0\\
+\textbf{结构}
+  
+  - 将训练集分组，每组batch\_size个sample。
+  
+  - 对这个batch的数据进行向量化计算，计算loss，斜率，调用优化函数。
+
+  - 即每一batch使用相同的权重 偏差。一次训练一共只遍历一次所有sample，共$\frac{sample\_size}{|B|}$次向量化计算
 
 
 \section{convolutional neural network卷积神经网络}
