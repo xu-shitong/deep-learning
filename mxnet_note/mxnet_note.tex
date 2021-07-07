@@ -12,6 +12,9 @@
 \begin{document}
 \maketitle
 
+% ----------------------------------------------------------------------
+% |                              NDArray                               |
+% ----------------------------------------------------------------------
 \section{NDArray}
 
 \noindent \texttt{from mxnet import nd}\\
@@ -48,6 +51,7 @@
   
   当X Y维数不同时，广播boardcast 机制先将X，Y按行或列复制成维数一样的张量，随后element-wise操作\\
 \texttt{X.exp()} // 张量element-wise 取指数\\
+\texttt{X.relu()} // 对每一X元素使用relu 激发函数\\
 \texttt{nd.dot(X, Y)} //矩阵乘法\\
 \texttt{nd.concat(X, Y, dim=n)}
 
@@ -89,9 +93,18 @@
 \texttt{from d2lzh import plt}\\
 \texttt{plt.scatter(array\_x, array\_y, 1)}
 
-  描点，\texttt{array\_x}, \texttt{array\_y}为python list
+  描点，\texttt{array\_x}, \texttt{array\_y}为python list\\\\
+\texttt{nd.save('FILE\_NAME', X)}
 
+  存储NDArray数据，存入FILE\_NAME文件中
 
+  X 可为 NDArray, [NDArray] 数组, {KEY: NDArray, ...} 字典
+  
+  读取：\texttt{X = load('FILE\_NAME')}。读取 NDArray 和 [NDArray] 时返回类型都为list
+
+% ----------------------------------------------------------------------
+% |                               训练                                  |
+% ----------------------------------------------------------------------
 \section{训练}
 
 \noindent \texttt{from mxnet import autograd}\\
@@ -113,15 +126,46 @@
 \texttt{x.grad} // 调取斜率矩阵\\
 \texttt{autograd.is\_training()} // 在\texttt{autograd.record()内返回true，否则返回false}
 
-
+% ----------------------------------------------------------------------
+% |                     使用neural network模型训练                       |
+% ----------------------------------------------------------------------
 \section{使用neural network模型训练}
 
 \noindent \texttt{from mxnet.gluon import nn}\\
 \texttt{from mxnet import init}\\
 \texttt{from mxnet.gluon import loss as gloss}\\
+\texttt{net = nn.Dense(2, IN\_UNITS, ACTIVATION)}
+
+  创建一个全连接层，包含2个节点
+
+  IN\_UNITS = \texttt{in\_units=N} 避免延后初始化。定义输入变量数，使得net在调用initialize()后即有权重矩阵，否则需要一次forward后才能访问权重矩阵
+  
+  ACTIVATION = \texttt{activation='relu'} 定义激发函数\\
 \texttt{net = nn.Sequential()} // 创建一个神经网络模型，不包含任何layer\\
-\texttt{net.add(nn.Dense(2))} // 在模型中加入一个全连接层，包含一个节点\\
-\texttt{net.initialize(init.Normal(sigma=0.3))} // 初始化整个神经网络，所有权重$\sim N(0, 0.3)$，所有偏差值=0\\
+\texttt{net.add(nn.Dense(...), nn.Dropout(PROB), ...))}
+
+  add中可同时包含多个层
+  
+  nn.Dropout()为丢弃法使用的丢弃层。定义前一层的权重有PROB几率被清零，1-p几率被拉伸\\
+\texttt{net.initialize(INIT, FORCE\_REINIT)} 
+
+  初始化层内的参数，随后调用\texttt{net(X)}得到全连接层对输入矩阵X的输出
+  
+  INIT = \texttt{init.Normal(sigma=0.3)} 初始化整个神经网络，对每一层调用initialize。所有权重$\sim N(0, 0.3)$，所有偏差值=0
+  
+  FORCE\_INIT = \texttt{force\_init = True} 强制初始化参数，不论参数有没有被初始化过
+  
+  对nn.Dense() 和nn.Sequential() 创建的net都可调用，用法一样\\
+\texttt{net[i].params}
+
+  访问第i hidden layer的权重 偏差值。
+  
+  返回类型为ParameterDict，可通过['KEY']分别得到权重和偏差\\
+\texttt{net[i].weight} 
+  
+  直接访问权重
+
+  net[i].weight.data() 得到NDArray类型的权重矩阵\\
 \texttt{loss = gloss.L2Loss()}
   
   定义损失函数为平方损失函数，loss为一函数\\
@@ -148,6 +192,52 @@
 \texttt{l = loss(net(features), labels)}
 
   调用loss函数
+
+% ----------------------------------------------------------------------
+% |                   自定义class形式的neural network                    |
+% ----------------------------------------------------------------------
+\section{自定义class形式的neural network}
+\noindent \texttt{class CLASS\_NAME(nn.Block):}
+
+  \texttt{def \_\_init\_\_(self, **kwargs):}
+
+  \quad \texttt{super(NySequential, self).\_\_init\_\_(**kwargs)}
+
+  // 初始化class\\
+
+  \quad \texttt{self.weight = self.params.get('weight', shape=(., .))}
+
+  // 通过系统定义的params生成类型为parameterDict的参数矩阵\\
+
+  \texttt{def add(self, block):}
+
+  \quad \texttt{self.\_children[block.KEY] = block}
+
+  // 加入一个layer，使用layer的一个key做index标注此layer存在哪一层
+
+  // 例：layer为nn.Dense(2, activation='relu')\\
+
+  \texttt{def forward(self, x):}
+
+  \quad \texttt{for block in self.\_children.values():}
+
+  \quad \quad \texttt{x = block(x)}
+
+  \quad \quad \texttt{return x}
+
+  // forward写法，调用net(X)等同于调用net.forward(X)\\
+\texttt{class INIT\_NAME(init.Initializer):}
+
+  \texttt{def \_init\_weight(self, name, data):}
+
+  \quad \texttt{(对data更改值的函数)}\\
+\texttt{net.initialize(INIT\_NAME)}
+
+  使用定义的函数初始化权重 偏差
+
+% ----------------------------------------------------------------------
+% |                     图像分类数据集fashion-MINST                      |
+% ----------------------------------------------------------------------
 \section{图像分类数据集fashion-MINST}
 \noindent \texttt{from mxnet.gluon import data as gdata}\\
 \texttt{mnist\_train = gdata.version.FashionMINST(train=True)} 

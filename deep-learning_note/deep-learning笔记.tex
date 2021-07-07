@@ -18,6 +18,7 @@
 \textbf{sample样本}：一组特征的取值和对应的标签输出\\
 \textbf{batch}：batch size个sample被分为一组，进行向量化的计算，称$B$\\
 \textbf{hyperparameter超参数}：人为设定的参数。如样本个数（批量大小batch size）$|B|$，学习率$\eta $。少数情况下通过学习得到\\
+\textbf{W 一层layer的权重矩阵} 行数 = 前层节点数，列数 = 当前层节点数
 \textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接\\
 \textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正 2. 值总和为1\\
 \textbf{cross entropy交叉熵}
@@ -89,7 +90,18 @@
   \textbf{二维核/卷积核/filter 过滤器}：在输入数组上滑动，每次和二维数组矩阵一部分按元素相乘，相乘结果求和作为输出矩阵的元素\\
 \textbf{二维卷积层}：
 
-  将输入和卷积核做互相关运算，结果加上const作为输出
+  将输入和卷积核做互相关运算，结果加上const作为输出\\
+\textbf{activation function只出现在hidden layer的输出，输出层无需activation function}
+
+
+
+
+
+
+% --------------------------------------------------------------------------
+% |                       Deep Learning 第6章笔记                           |
+% --------------------------------------------------------------------------
+
 \section{Deep Feedforward Network (Deep Learning 第6章笔记)}
 \noindent \textbf{SVM支持向量机}
 
