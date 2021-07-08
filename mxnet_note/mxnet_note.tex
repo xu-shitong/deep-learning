@@ -89,7 +89,12 @@
   index取值操作，同X$[v_1][v_2][v_3]...[v_n]$
 
   当$v_i$为n:m时，代表范围$[n, m)$\\
-\texttt{X.asnumpy()} // 转换成python list\\\\
+\texttt{X.asnumpy()} // 转换成python list\\
+\texttt{nd.stack($x_1$, $x_2$, ...)} // 根据提供的子张量，构造高维的张量
+\texttt{nd.add\_n($x_1$, $x_2$, ...)} // 多个NDArray相加，等同$x_1 + x_2 + ...$\\
+\texttt{func(*[elem, elem, ...])}
+
+  在函数输入中，当函数得到多个元素，调取方法为func(elem, elem, ...)。使用 * 将list转换成分隔的参数输入\\\\
 \texttt{from d2lzh import plt}\\
 \texttt{plt.scatter(array\_x, array\_y, 1)}
 
@@ -253,9 +258,42 @@
 
   打印图片，显示图片仍使用plt.show()
 
-  features必须包含多余一个图片矩阵，否则报错
+  features必须包含多余一个图片矩阵，否则报错\\
+\texttt{填充padding}：
+  
+  超参数，
 
+% ----------------------------------------------------------------------
+% |              convolutional neural network卷积神经网络                |
+% ----------------------------------------------------------------------
+\section{convolutional network卷积神经网络}
+\noindent \texttt{CONV\_2D = nn.Conv2D(PATH\_NUM, KERNEL\_SIZE, PADDING, STRIDE)}
 
+  - 定义一卷积层
+
+  - PATH\_NUM = 整数，定义输出通道数
+
+  - KERNEL\_SIZE = \texttt{kernel\_size = (., .)} 定义kernel的shape
+
+  \quad \texttt{kernel=N} 等同\texttt{kernel=(N, N)}
+  
+  - PADDING = \texttt{padding=(n, m)}  输入矩阵上下分别添加n行，左右分别添加m列全零元素
+
+  \quad \texttt{padding=N} 等同\texttt{padding=(N, N)}
+  
+  - STRIDE = \texttt{stride=(n, m)} 横向移动步幅为n，纵向步幅为m
+  
+  \quad \texttt{stride=N} 等同\texttt{stride=(N, N)}\\
+\texttt{CONV\_2D.weight.data()[:] = ... * CONV\_2D.weight.grad()}
+
+  优化函数写法。若输出矩阵计算由对每一元素赋值得到，无法使用自动求斜率
+  
+  使用的输入输出矩阵shape：\texttt{(批量大小，通道数，行数，列数)}\\
+\texttt{nn.MaxPool2D(SHAPE, PADDING, STRIDE)}
+
+  SHAPE = \texttt{(n, m)} 或 \texttt{N} 定义池化窗口shape
+
+  PADDING, STRIDE同kernel
 
 
 \end{document}
