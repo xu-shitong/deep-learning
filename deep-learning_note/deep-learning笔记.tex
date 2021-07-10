@@ -1,6 +1,7 @@
 \documentclass[UTF8]{ctexart}
 \usepackage{geometry}
 \usepackage{amsmath}
+\usepackage{lmodern}
 \usepackage{graphicx} %插入图片的宏包
 \usepackage{float} %设置图片浮动位置的宏包
 \geometry{a4paper,scale=0.8}
@@ -16,6 +17,7 @@
 % |                                基本定义                                  |
 % --------------------------------------------------------------------------
 \section{基本定义}
+
 \noindent \textbf{label标签}：输出结果，$\hat{y} $为计算得到的结果，$y$为实际测量结果\\
 \textbf{feature特征}：用于预测标签的输入变量，$x^{(i)}_j$为第i组sample第j号特征\\
 \textbf{sample样本}：一组特征的取值和对应的标签输出\\
@@ -84,8 +86,8 @@
   
   - 对这个batch的数据进行向量化计算，计算loss，斜率，调用优化函数。
 
-  - 即每一batch使用相同的权重 偏差。一次训练一共只遍历一次所有sample，共$\frac{sample\_size}{|B|}$次向量化计算
-\textbf{activation function只出现在hidden layer的输出，输出层无需activation function}\\
+  - 即每一batch使用相同的权重 偏差。一次训练一共只遍历一次所有sample，共$\frac{sample\_size}{|B|}$次向量化计算\\
+\textbf{activation function只出现在hidden layer的输出，输出层无需activation function}
 
 
 % --------------------------------------------------------------------------
@@ -134,7 +136,166 @@
 
   \quad 2. 平均池化层：取池化窗口平均值
 
-  \textbf{多输入通道间池化结果不相加，即 输入通道数 = 输出通道数}
+  \textbf{多输入通道间池化结果不相加，即 输入通道数 = 输出通道数}\\
+\textbf{LeNet卷积神经网络}
+
+  \textbf{1.使用2组 卷积计算层 激活函数层 池化层}
+
+  \quad 输出通道数分别为6，16。卷积层 kernel 为(5, 5), 步幅为1, 无padding
+
+  \quad 激活函数层 对每一元素做sigmoid
+
+  \quad 池化层 窗口(2, 2)，步幅为2
+
+  \textbf{2.使用3组全连接层}
+
+  \quad 节点数120 84 10，使用sigmoid激活函数
+
+  \quad 将(批量大小, 通道数, height, width) 看做 (批量大小，通道数 * height * width)处理\\
+\textbf{AlexNet深度卷积神经网络}：
+
+  除输出层和丢弃层，全部使用relu做激活函数
+
+  \textbf{卷积部分}
+  
+  \quad - 2组包含pooling的卷积计算
+  
+  \quad \texttt{nn.Conv2D(96, kernel\_size=11, strides=4, activation='relu')}
+
+  \quad \texttt{nn.MaxPool2D(pool\_size=3, strides=2)}
+
+  \quad \texttt{nn.Conv2D(256, kernel\_size=5, padding=2, activation='relu')}
+
+  \quad \texttt{nn.MaxPool2D(pool\_size=3, strides=2)}
+  
+  \quad - 3组仅pooling一次的卷积计算，高输出通道，低卷积窗口
+  
+  \quad \texttt{nn.Conv2D(384, kernel\_size=3, padding=1, activation='relu')}
+  
+  \quad \texttt{nn.Conv2D(384, kernel\_size=3, padding=1, activation='relu')} 
+  
+  \quad \texttt{nn.Conv2D(256, kernel\_size=3, padding=1, activation='relu')}
+  
+  \quad \texttt{nn.MaxPool2D(pool\_size=3, strides=2)}
+
+  \textbf{全连接层部分}
+  
+  \quad - 两hidden layer全连接层使用丢弃法
+
+  \quad \texttt{nn.Dense(4096, activation="relu"), nn.Dropout(0.5)}
+  
+  \quad \texttt{nn.Dense(4096, activation="relu"), nn.Dropout(0.5)}
+  
+  \quad \texttt{nn.Dense(10)} // 根据需求改变输出层节点，原论文为1000\\
+\textbf{VGG使用重复元素网络}
+
+  \textbf{VGG基础块}
+
+  \quad 数个kernel (3, 3)，padding为1的卷积层 + 1个步幅为2，窗口(2, 2)的池化层
+
+  VGG 神经网络由 数个VGG块 + 数个全连接层 组成
+
+  例：\textbf{VGG-11}
+  
+  \quad 包含结构为(1, 64) (1, 128) (2, 256) (2, 512) (2, 512) 5层VGG块
+
+  \quad \quad (n, m) 代表此VGG块使用n层卷积层，各有m通道
+  
+  \quad 和3层全连接层，实现同AlexNet的全连接层部分
+  
+  \quad 共8层卷积层+3层全连接层，所以称VGG-11\\
+\textbf{NiN神经网络}
+
+  \textbf{NiN块}
+
+  \quad 1个自定义卷积层 + 2层 (1, 1)kernel 卷积层，3层卷积层都不包含池化层，都有同样通道数
+
+  \quad 自定义卷积层可设置kernel，步幅，填充。(1, 1)除了通道数可设置，其余固定为默认值
+
+  NiN神经网络有多组 (NiN块 + 池化层) 每一NiN块后有池化层
+  
+  例：\textbf{NiN模型}
+
+  \quad - NiN块部分
+
+  \quad \texttt{nin\_block(96, kernel\_size=11, strides=4, padding=0)}
+
+  \quad \texttt{nn.MaxPool2D(pool\_size=3, strides=2)}
+
+  \quad \texttt{nin\_block(256, kernel\_size=5, strides=1, padding=2)}
+
+  \quad \texttt{nn.MaxPool2D(pool\_size=3, strides=2)}
+
+  \quad \texttt{nin\_block(384, kernel\_size=3, strides=1, padding=1)}
+
+  \quad \texttt{nn.MaxPool2D(pool\_size=3, strides=2)}
+
+  \quad - 在NiN块部分结束后加入丢弃层
+
+  \quad \texttt{nn.Dropout(0.5)}
+
+  \quad - 转化为对应分类个数的输出
+
+  \quad \texttt{nin\_block(10, kernel\_size=3, strides=1, padding=1)}
+
+  \quad \texttt{nn.GlobalAvgPool2D()} // 全局平均池化层，每一通道取矩阵所有元素的平均值
+
+  \quad \texttt{nn.Flatten()} // 将四维的输出转成二维的输出，其形状为(批量大小, 10)\\
+\textbf{GoogLeNet含并行结构神经网络}
+
+  \textbf{Inception块}
+  \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+    \centering %图片居中
+    \includegraphics[width=0.6\textwidth]{note_images/inception_block.png} %插入图片，[]中设置图片大小，{}中是图片文件名
+  \end{figure}
+
+  \quad 结构表示：($n_1$, ($n_{21}$, $n_{22}$), ($n_{31}$, $n_{32}$), $n_4$) 
+  
+  \quad \quad 第一线路使用$n_1$通道
+ 
+  \quad \quad 第二线路第一卷积层使用$n_{21}$通道，第二层卷积层使用$n_{22}$通道 1填充
+ 
+  \quad \quad 第三线路第一卷积层使用$n_{31}$通道，第二层卷积层使用$n_{32}$通道 2填充
+  
+  \quad \quad 第四线路第一池化层使用(3, 3)窗口 1填充，第二层卷积层使用$n_4$通道
+
+  \quad 所有层输出作为不同通道结果，即最终有$n_1 + n_{22} + n_{32} + n_4$通道
+
+  GoogLeNet结构：
+
+  \quad 5个串联模块，每一模块间使用 步幅2 (3, 3)窗口 1填充 池化层
+
+  \quad 1. 64通道(7, 7)kernel卷积层 + 池化层
+
+  \quad 2. 64通道(1, 1)kernel卷积层 + 64 * 3通道(3, 3)kernel 1填充卷积层 + 池化层
+
+  \quad 3. 串联2 inception 块 + 池化层，分别有结构
+
+  \quad \quad (64, (96, 128), (16, 32), 32)
+
+  \quad \quad (128, (128, 192), (32, 96), 64)
+
+  \quad 4. 串联5 inception 块 + 池化层
+
+  \quad \quad (192, (96, 208), (16, 48), 64)
+
+  \quad \quad (160, (112, 224), (24, 64), 64)
+
+  \quad \quad (128, (128, 256), (24, 64), 64)
+
+  \quad \quad (112, (144, 288), (32, 64), 64)
+
+  \quad \quad (256, (160, 320), (32, 128), 128)
+
+  \quad 5. 串联2 inception 块 + 全局平均池化层
+
+  \quad \quad (256, (160, 320), (32, 128), 128)
+
+  \quad \quad (384, (192, 384), (48, 128), 128)
+
+  \quad 6. 全连接层，节点数和分类类别数相同
+
+
 % --------------------------------------------------------------------------
 % |                              优化方法                                   |
 % --------------------------------------------------------------------------
@@ -145,10 +306,21 @@
 
   \quad 处于 输入的仿射变换 和 激活函数间，即 输出 = $\phi (BN(x))$ 
 
-  \quad 1. 对于批量仿射 $x = Wu + b$，求标准化$\hat{x}_i = \frac{{x_i} - \mu}{\sqrt{\sigma^2 + \varepsilon }}$
+  \quad 1. 对于批量仿射 $x = Wu + b$，求标准化$\hat{x}_i = \frac{{x_i} - \mu}{\sqrt{\sigma^2 + \varepsilon }}$。$\mu $和 $\sigma$都为此组仿射变换的结果
 
-  \quad 2. $BN(x) = \gamma * \hat{x}_i + \beta $，* + 为按元素加法 乘法
+  \quad 2. $BN(x) = \gamma * \hat{x}_i + \beta $，$\gamma$拉伸 $\beta$偏移。* + 为按元素加法 乘法
 
+  \textbf{2. 对卷积层做批量归一}
+
+  \quad 处于 卷积计算 和 激活函数 间，卷积计算 -> 批量归一 -> 激活函数 -> 池化层
+
+  \quad 各通道独立计算，各有独立拉伸$\gamma$ 偏移$\beta$。
+  
+  \quad $\sigma$, $\mu$为此通道 一批量内 所有矩阵 的所有元素 的总体方差，平均值
+
+  \quad 得到$\sigma$, $\mu$后对此通道此批量内所有元素求标准化
+
+  \quad 最终对此通道 每一sample标准化的结果拉伸 偏移
 
 % --------------------------------------------------------------------------
 % |                       Deep Learning 第6章笔记                           |

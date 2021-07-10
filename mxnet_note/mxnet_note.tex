@@ -157,6 +157,8 @@
   初始化层内的参数，随后调用\texttt{net(X)}得到全连接层对输入矩阵X的输出
   
   INIT = \texttt{init.Normal(sigma=0.3)} 初始化整个神经网络，对每一层调用initialize。所有权重$\sim N(0, 0.3)$，所有偏差值=0
+
+  INIT = \texttt{init.Xavier()} 使用Xavier随机初始化
   
   FORCE\_INIT = \texttt{force\_init = True} 强制初始化参数，不论参数有没有被初始化过
   
@@ -267,11 +269,11 @@
 % |              convolutional neural network卷积神经网络                |
 % ----------------------------------------------------------------------
 \section{convolutional network卷积神经网络}
-\noindent \texttt{CONV\_2D = nn.Conv2D(PATH\_NUM, KERNEL\_SIZE, PADDING, STRIDE)}
+\noindent \texttt{CONV\_2D = nn.Conv2D(CHANNEL\_NUM, KERNEL\_SIZE, PADDING, STRIDE)}
 
   - 定义一卷积层
 
-  - PATH\_NUM = 整数，定义输出通道数
+  - CHANNEL\_NUM = 整数，定义输出通道数
 
   - KERNEL\_SIZE = \texttt{kernel\_size = (., .)} 定义kernel的shape
 
