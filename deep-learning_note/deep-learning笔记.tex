@@ -34,14 +34,17 @@
 
   使用：联系两个值概率分部间的差异，即可将数值输出$\hat{y}$和分类结果$y$直接做对比
 
-  \quad 仍可和softmax同时使用，softmax将可能性先转换为正数并和为1，随后使用cross entropy
+  \quad 仍可和softmax同时使用，softmax将可能性先转换为正数并和为1，随后使用cross entropy\\
+\textbf{指数加权移动平均}
+
+  $y_t = \gamma y_{t-1}+(1-\gamma)x_t$
 
 % --------------------------------------------------------------------------
 % |                       linear regression线性回归                         |
 % --------------------------------------------------------------------------
 \section{linear regression线性回归}
 \noindent \textbf{平方代价函数}：$J(\theta ) = \frac{1}{n} \sum_{i = 1}^{n} J^{(i)}(\theta )$，为所有样本误差的平均值\\
-\textbf{迭代}：$\theta_i = \theta_i - \frac{\eta}{|B|}\sum_{i\in B} \frac{d J^{(i)}(\theta)}{d \theta_i}$，即对所有sample训练一次，得到label差值，对每一参数减 斜率*学习率 的平均值
+\textbf{迭代}：$\theta_i = \theta_i - \frac{\eta}{|B|}\sum_{j\in B} \frac{d J^{(j)}(\theta)}{d \theta_i}$，即对所有sample训练一次，得到label差值，对每一参数减 斜率*学习率 的平均值
   
   当使用平方代价函数：
   
@@ -87,7 +90,8 @@
   - 对这个batch的数据进行向量化计算，计算loss，斜率，调用优化函数。
 
   - 即每一batch使用相同的权重 偏差。一次训练一共只遍历一次所有sample，共$\frac{sample\_size}{|B|}$次向量化计算\\
-\textbf{activation function只出现在hidden layer的输出，输出层无需activation function}
+\textbf{activation function只出现在hidden layer的输出，输出层无需activation function}\\
+\textbf{梯度下降的过程中一直使用真实梯度，无需减小学习率}
 
 
 % --------------------------------------------------------------------------
@@ -407,9 +411,9 @@
 \textbf{处理语言模型}：将每一文字转化为索引，使用索引做训练参数集\\
 \textbf{采样方式}：
 
-  $BATCH_SIZE$ 每次采集的样本数
+  $BATCH\_SIZE$ 每次采集的样本数
   
-  $NUM_STEPS$ 每个样本包含的时间步数，
+  $NUM\_STEPS$ 每个样本包含的时间步数，
 
   \textbf{1 随机采样}：
 
@@ -465,7 +469,83 @@
   \quad $H_t = Z_t \odot H_{t-1} + (1-Z_t)\odot \tilde{H_t}$\\
 \textbf{** LSTM长短期记忆 门控循环网络 **}
 
+% --------------------------------------------------------------------------
+% |                             代码算法优化                                 |
+% --------------------------------------------------------------------------
+\section{代码算法优化}
+\noindent \textbf{Stochastic Gradient Decent 随机梯度下降}：采样方法
+
+  每次迭代随机选择一个\textbf{样本}，得到权重针对此样本的斜率进行梯度下降 而不是求参数针对所有样本的代价函数斜率。开销从O(n)变为O(1)
+
+  \quad 即 任取的样本j，SGD迭代为$\theta_i = \theta_i - \eta \frac{d J^{(j)}(\theta)}{d \theta_i}$\\
+\textbf{batch gradient descent 小批量随机梯度下降}：采样方法
+
+  每次迭代随机选择一组样本 $B$，计算参数关于$B$的代价函数斜率
+
+  重复采样：允许$B$中重复出现同一样本。反之不重复采样
+
+  随迭代次数增加，学习率可减小，使学习率和斜率的乘积方差减小\\\\
+\textbf{动量法}：迭代方法
+
+  解决固定一学习率值无法同时满足多个参数的学习率范围，导致某些参数发生学习太慢，某些参数不断越过最优解
+
+  定义：
   
+  \quad 向量$v_t$为第t次迭代每一参数的速度变量
+
+  \quad 向量$x_t$为第t次迭代参数向量
+
+  \quad 向量$g_t$为第t次迭代每一参数的斜率
+
+  迭代：
+
+  \quad $v_t = \gamma v_{t-1} + \eta_t g_t$
+
+  \quad $x_t = x_{t-1} - v_t$\\
+\textbf{AdaGrad算法}：迭代方法
+
+  根据参数斜率调整学习率
+
+  定义向量$s_t$为第t次迭代累加变量，累计每一参数的斜率平方和
+
+  迭代：
+
+  \quad $s_t = s_{t-1} + g_t \odot g_t$
+
+  \quad $x_t = x_{t-1} - \frac{\eta}{\sqrt{s_t + \epsilon } } \odot g_t$
+
+  \quad \quad 即每一参数有变量记录所有斜率历史，每次迭代时\ 学习率/斜率历史l2 norm
+
+  由于累加变量斜率历史，学习率始终降低，造成学习缓慢\\
+\textbf{RMSProp 算法}：迭代方法
+
+  解决AdaGrad末期学习率过低问题
+
+  迭代：
+  
+  \quad $s_t = \gamma s_{t-1} + (1-\gamma)g_t \odot g_t$即 对$s_t$按元素平方做指数加权
+
+  \quad $x_t$同AdaGrad算法\\
+\textbf{AdaDelta 算法}：迭代方法
+
+  解决AdaGrad末期学习率过低问题，不使用超参数
+
+  定义：
+
+  \quad 向量$g_t'$记录参数变化量
+
+  \quad 向量$\varDelta x_t$对$g_t'$按平方做指数加权
+
+  迭代：
+
+  \quad $s_t = \gamma s_{t-1} + (1-\gamma)g_t \odot g_t$\ \ \ \ 同RMSProp
+
+  \quad $\varDelta x_t = \gamma \varDelta x_{t-1} + (1-p)g_t' \odot g_t'$\ \ \ \ $\varDelta x_t$初始化为全零向量
+
+  \quad $g_t' = \sqrt{\frac{\varDelta x_t + \epsilon }{s_t + \epsilon }} \odot g_t $
+
+  \quad $x_t = x_{t-1} - g_t'$\ \ \ \ \ \ \ \ \ \ $g_t'$即参数变化率\\
+
 
 
 
