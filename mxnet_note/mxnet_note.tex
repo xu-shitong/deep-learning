@@ -13,6 +13,14 @@
 \maketitle
 
 % ----------------------------------------------------------------------
+% |                              import                                |
+% ----------------------------------------------------------------------
+\section{imports}
+\noindent \texttt{from mxnet import }\\
+\texttt{from mxnet.gluon import }\\
+\texttt{from d2lzh import show\_bboxes}
+
+% ----------------------------------------------------------------------
 % |                              NDArray                               |
 % ----------------------------------------------------------------------
 \section{NDArray}
@@ -263,6 +271,75 @@
   features必须包含多余一个图片矩阵，否则报错
 
 % ----------------------------------------------------------------------
+% |                            图片显示 操作                                 |
+% ----------------------------------------------------------------------
+\section{图片显示\ 操作}
+\noindent \texttt{from mxnet import image}\\
+\texttt{d2lzh.set\_figsize()} // 定义画布为400 x 500\ 画布为plt\\
+\texttt{img = image.imread('FILE\_PATH')} // 定义图片\\
+\texttt{fig = d2lzh.plt.imshow(img.asnumpy())} // 显示图片\\
+\texttt{aux = gdata.vision.transforms.}
+
+  \texttt{RandomFlipLeftRight()} //0.5\ 几率对图片左右翻转
+
+  \texttt{RandomFlipTopBottom()} //0.5\ 几率上下翻转
+
+  \texttt{RandomResizedCrop(($WIDTH$, $HEIGHT$), $SCALE$, $RATIO$)}
+
+  \quad $WIDTH$, $HEIGHT$定义输出图片的\ *宽高*
+    
+  \quad \texttt{scale=($S_{min}$, $S_{max}$)} 0 < $S_{min}$, $S_{max}$ <= 1\ 输出图像面积最小为原图$S_{min}$, 最大原图$S_{max}$ 
+    
+  \quad \texttt{ratio=($R_{min}$, $R_{max}$)} $R_{min}$\ <\ 输出图像\ 宽高比值\ <\ $R_{min}$
+  
+  \texttt{RandomBrightness(P)} 
+
+  \quad 调整亮度，新亮度在\ 原亮度(1 $\pm$ P)范围内
+
+  \texttt{RandomHue(0.5)} // 调整色调
+
+  \texttt{RandomColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5)}
+
+  \quad 同时调整亮度\ 对比度\ 饱和度\ 色调
+  
+  \texttt{Compose([AUX1, AUX2, ...])} // 叠加多个转换\\
+\texttt{aux(img)} // 使用aux\\
+\texttt{rect = d2lzh.plt.Rectangle(xy=(X, Y), WIDTH, HEIGHT, FILL, EDGECOLOUR, LINEWIDTH)}\\
+\texttt{fig.axes.add\_patch(rect)}
+  
+  在图像上添加矩形框
+
+  \texttt{FILL}为\texttt{boolean}值，图像是否填充
+
+  \texttt{EDGECOLOUR}为string，代表边框颜色\\
+\texttt{from mxnet import contrib}\\
+\texttt{Y = contrib.nd.MultiBoxPrior(NDArray, SIZES, RATIOS)}
+
+  SIZES = \texttt{sizes=}$(s_1, s_2,...,s_n)$python数组
+
+  RATIOS = \texttt{ratios=}$r_1, r_2, ...,r_m$python数组
+
+  目的：
+  
+  \quad 得到坐标代表锚框，包括$(s_1, r_1), (s_1, r_2), ..., (s_1, r_m), (s_2, r_1), ..., (s_n, r_m)$共$n+m-1$个锚框类型
+
+  \quad reshape成(高，宽，-1，4)
+
+  \quad 4代表每一锚框由左上和右下坐标表示，坐标为占宽高比，非像素值
+
+  \quad \quad 此时访问[h, w, :, 4]得到中心点在(h, w)的所有锚框坐标\\
+\texttt{show\_bboxes(AXES, BBOXES, LABELS, COLORS)}
+
+  AXES = \texttt{fig.axes}\ 传入添加进的图片axes
+
+  BBOXES (n, 4)形状NDArray，每一4元素NDArray表示一锚框右上左下坐标
+
+  LABELS python string数组，长度为\texttt{n}，对应BBOXES个数
+
+  COLORS = \texttt{'k'} 颜色为黑，为空则使用默认不同颜色
+
+  
+% ----------------------------------------------------------------------
 % |              convolutional neural network卷积神经网络                |
 % ----------------------------------------------------------------------
 \section{convolutional network卷积神经网络}
@@ -292,6 +369,6 @@
 
   SHAPE = \texttt{(n, m)} 或 \texttt{N} 定义池化窗口shape
 
-  PADDING, STRIDE同kernel\\
-\texttt{}
+  PADDING, STRIDE同kernel
+
 \end{document}

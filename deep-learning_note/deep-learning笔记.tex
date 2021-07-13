@@ -25,10 +25,10 @@
 \textbf{hyperparameter超参数}：人为设定的参数。如样本个数（批量大小batch size）$|B|$，学习率$\eta $。少数情况下通过学习得到\\
 \textbf{W 一层layer的权重矩阵} 行数 = 前层节点数，列数 = 当前层节点数
 \textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接\\
-\textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正 2. 值总和为1\\
+\textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正\ 2. 值总和为1\\
 \textbf{cross entropy交叉熵}
 
-  定义：分部p 和 分部q 间的 cross entropy $H(p, q) = -E_p(\log (q))$。为 expected value of $log (q)$ with respect to distribution p
+  定义：分部p\ 和\ 分部q\ 间的\ cross entropy $H(p, q) = -E_p(\log (q))$。为\ expected value of $log (q)$ with respect to distribution p
 
   公式：$H(y^{(i)}, \hat{y}^{(i)}) = -\sum_{j\in B}y^{(i)}log(\hat{y}^{(i)})$
 
@@ -44,7 +44,7 @@
 % --------------------------------------------------------------------------
 \section{linear regression线性回归}
 \noindent \textbf{平方代价函数}：$J(\theta ) = \frac{1}{n} \sum_{i = 1}^{n} J^{(i)}(\theta )$，为所有样本误差的平均值\\
-\textbf{迭代}：$\theta_i = \theta_i - \frac{\eta}{|B|}\sum_{j\in B} \frac{d J^{(j)}(\theta)}{d \theta_i}$，即对所有sample训练一次，得到label差值，对每一参数减 斜率*学习率 的平均值
+\textbf{迭代}：$\theta_i = \theta_i - \frac{\eta}{|B|}\sum_{j\in B} \frac{d J^{(j)}(\theta)}{d \theta_i}$，即对所有sample训练一次，得到label差值，对每一参数减\ 斜率*学习率\ 的平均值
   
   当使用平方代价函数：
   
@@ -89,7 +89,7 @@
   
   - 对这个batch的数据进行向量化计算，计算loss，斜率，调用优化函数。
 
-  - 即每一batch使用相同的权重 偏差。一次训练一共只遍历一次所有sample，共$\frac{sample\_size}{|B|}$次向量化计算\\
+  - 即每一batch使用相同的权重\ 偏差。一次训练一共只遍历一次所有sample，共$\frac{sample\_size}{|B|}$次向量化计算\\
 \textbf{activation function只出现在hidden layer的输出，输出层无需activation function}\\
 \textbf{梯度下降的过程中一直使用真实梯度，无需减小学习率}
 
@@ -132,7 +132,7 @@
   \quad 多组($c_i$, 行数，列数)分别产生输出通道的结果矩阵，则有$c_o$条输出通道\\
 \textbf{池化层}：
   
-  作用：1 为了防止当输入变化时，输出立即随之更改。2 减少计算量
+  作用：1 为了防止当输入变化时，输出立即随之更改。2\ 减少计算量
 
   池化窗口，同卷积层的感受野。限定某块输入被同时考虑，同样有stride，可对输入padding
 
@@ -145,11 +145,11 @@
 
   \textbf{1.使用2组 卷积计算层 激活函数层 池化层}
 
-  \quad 输出通道数分别为6，16。卷积层 kernel 为(5, 5), 步幅为1, 无padding
+  \quad 输出通道数分别为6，16。卷积层\ kernel 为(5, 5), 步幅为1, 无padding
 
-  \quad 激活函数层 对每一元素做sigmoid
+  \quad 激活函数层\ 对每一元素做sigmoid
 
-  \quad 池化层 窗口(2, 2)，步幅为2
+  \quad 池化层\ 窗口(2, 2)，步幅为2
 
   \textbf{2.使用3组全连接层}
 
@@ -190,14 +190,14 @@
   
   \quad \texttt{nn.Dense(4096, activation="relu"), nn.Dropout(0.5)}
   
-  \quad \texttt{nn.Dense(10)} // 根据需求改变输出层节点，原论文为1000\\
+  \quad \texttt{nn.Dense(10)} //\ 根据需求改变输出层节点，原论文为1000\\
 \textbf{VGG使用重复元素网络}
 
   \textbf{VGG基础块}
 
-  \quad 数个(3, 3)kernel 1填充卷积层 + 1个(2, 2)窗口 2步幅池化层
+  \quad 数个(3, 3)kernel 1填充卷积层 + 1个(2, 2)窗口\ 2步幅池化层
 
-  VGG 神经网络由 数个VGG块 + 数个全连接层 组成
+  VGG 神经网络由\ 数个VGG块 + 数个全连接层 组成
 
   例：\textbf{VGG-11}
   
@@ -216,7 +216,7 @@
 
   \quad 自定义卷积层可设置kernel，步幅，填充。(1, 1)除了通道数可设置，其余固定为默认值
 
-  NiN神经网络有多组 (NiN块 + 池化层) 每一NiN块后有池化层
+  NiN神经网络有多组\ (NiN块 + 池化层)\ 每一NiN块后有池化层
   
   例：\textbf{NiN模型}
 
@@ -269,9 +269,9 @@
 
   GoogLeNet结构：
 
-  \quad 5个串联模块，每一卷积层使用relu激活函数，每一模块间使用 步幅2 (3, 3)窗口 1填充 池化层
+  \quad 5个串联模块，每一卷积层使用relu激活函数，每一模块间使用\ 步幅2 (3, 3)窗口\ 1填充\ 池化层
 
-  \quad 1. 64通道(7, 7)kernel 2步幅 3填充卷积层 + 池化层
+  \quad 1. 64通道(7, 7)kernel 2步幅\ 3填充卷积层 + 池化层
 
   \quad 2. 64通道(1, 1)kernel卷积层 + 64 * 3通道(3, 3)kernel 1填充卷积层 + 池化层
 
@@ -309,7 +309,7 @@
 
   \textbf{1. 对全连接层做批量归一}
 
-  \quad 处于 输入的仿射变换 和 激活函数间，即 输出 = $\phi (BN(x))$ 
+  \quad 处于\ 输入的仿射变换\ 和\ 激活函数间，即\ 输出 = $\phi (BN(x))$ 
 
   \quad 1. 对于批量仿射 $x = Wu + b$，求标准化$\hat{x}_i = \frac{{x_i} - \mu}{\sqrt{\sigma^2 + \varepsilon }}$。$\mu $和 $\sigma$都为此组仿射变换的结果
 
@@ -317,15 +317,15 @@
 
   \textbf{2. 对卷积层做批量归一}
 
-  \quad 处于 卷积计算 和 激活函数 间，卷积计算 -> 批量归一 -> 激活函数 -> 池化层
+  \quad 处于\ 卷积计算\ 和\ 激活函数\ 间，卷积计算 + 批量归一 + 激活函数 + 池化层
 
   \quad 各通道独立计算，各有独立拉伸$\gamma$ 偏移$\beta$。
   
-  \quad $\sigma$, $\mu$为此通道 一批量内 所有矩阵 的所有元素 的总体方差，平均值
+  \quad $\sigma$, $\mu$为此通道\ 一批量内\ 所有矩阵\ 的所有元素\ 的总体方差，平均值
 
   \quad 得到$\sigma$, $\mu$后对此通道此批量内所有元素求标准化
 
-  \quad 最终对此通道 每一sample标准化的结果拉伸 偏移\\
+  \quad 最终对此通道\ 每一sample标准化的结果拉伸\ 偏移\\
 \textbf{ResNet残差网络}
 
   \textbf{残差块}
@@ -336,27 +336,27 @@
   
   \quad 2. $f(x) - x$+(1, 1)卷积层对(x)卷积结果 + relu激活函数
   
-  \quad \quad 第一卷积层：(3, 3)kernel 1填充 (通道数 步幅自定义)
+  \quad \quad 第一卷积层：(3, 3)kernel 1填充 (通道数\ 步幅自定义)
 
-  \quad \quad \quad 第234组残差组 第一残差块 第一卷积层步幅为2，否则为1
+  \quad \quad \quad 第234组残差组 第一残差块\ 第一卷积层步幅为2，否则为1
 
   \quad \quad 第二卷积层：(3, 3)kernel 1填充 1步幅 (通道数自定义)
 
-  \quad \quad (1, 1)卷积层：(通道数 步幅自定义) 
+  \quad \quad (1, 1)卷积层：(通道数\ 步幅自定义) 
 
-  \quad \quad \quad 第234组残差组 第一残差块使用(1, 1)卷积层，步幅为2，否则直接+x
+  \quad \quad \quad 第234组残差组\ 第一残差块使用(1, 1)卷积层，步幅为2，否则直接+x
 
   \quad \quad 3层卷积层通道数共享同一自定义值，\textbf{要求2层卷积层输入输出通道数一致}
 
   ResNet-18模型：共18卷积层
 
-  \quad 1. 64通道(7, 7)kernel 2步幅 3填充 批量归一卷积层 + (3, 3)窗口 2步幅 1填充最大池化层
+  \quad 1. 64通道(7, 7)kernel 2步幅 3填充\ 批量归一卷积层 + (3, 3)窗口 2步幅 1填充最大池化层
 
-  \quad 2. 4组 残差块，每组包含多个残差块
+  \quad 2. 4组\ 残差块，每组包含多个残差块
 
-  \quad \quad 第一组 2个残差块 输出通道数和1中输出通道数一致
+  \quad \quad 第一组 2个残差块\ 输出通道数和1中输出通道数一致
   
-  \quad \quad 第二三四组 各2个残差块 输出通道数为前一层通道数$*2$
+  \quad \quad 第二三四组\ 各2个残差块\ 输出通道数为前一层通道数$*2$
 
   \quad 3. 全局平均池化层 + 对应输出结果数全连接层\\
 \textbf{DenseNet稠密连接网络}
@@ -381,7 +381,7 @@
 
   DenseNet模型
 
-  \quad 1. 64通道(7, 7)kernel 2步幅 3填充 批量归一卷积层 + (3, 3)窗口 2步幅 1填充最大池化层
+  \quad 1. 64通道(7, 7)kernel 2步幅 3填充\ 批量归一卷积层 + (3, 3)窗口 2步幅 1填充最大池化层
 
   \quad 2. 4组稠密块，由3个过渡层分隔
 
@@ -456,7 +456,7 @@
   
   \quad 更新层$Z_t = \sigma(X_tW_{xz} + H_{t-1}W_{hz} + b_z)$
 
-  \quad \quad W 为权重参数 b为偏差参数 $\sigma$为sigmoid函数
+  \quad \quad W 为权重参数\ b为偏差参数 $\sigma$为sigmoid函数
 
   \textbf{候选隐藏状态}
 
@@ -475,7 +475,7 @@
 \section{代码算法优化}
 \noindent \textbf{Stochastic Gradient Decent 随机梯度下降}：采样方法
 
-  每次迭代随机选择一个\textbf{样本}，得到权重针对此样本的斜率进行梯度下降 而不是求参数针对所有样本的代价函数斜率。开销从O(n)变为O(1)
+  每次迭代随机选择一个\textbf{样本}，得到权重针对此样本的斜率进行梯度下降\ 而不是求参数针对所有样本的代价函数斜率。开销从O(n)变为O(1)
 
   \quad 即 任取的样本j，SGD迭代为$\theta_i = \theta_i - \eta \frac{d J^{(j)}(\theta)}{d \theta_i}$\\
 \textbf{batch gradient descent 小批量随机梯度下降}：采样方法
@@ -544,9 +544,92 @@
 
   \quad $g_t' = \sqrt{\frac{\varDelta x_t + \epsilon }{s_t + \epsilon }} \odot g_t $
 
-  \quad $x_t = x_{t-1} - g_t'$\ \ \ \ \ \ \ \ \ \ $g_t'$即参数变化率\\
+  \quad $x_t = x_{t-1} - g_t'$\ \ \ \ \ \ \ \ \ \ $g_t'$即参数变化率
 
+% --------------------------------------------------------------------------
+% |                              计算机视觉                                  |
+% --------------------------------------------------------------------------
+\section{计算机视觉}
+\noindent 提升模型泛化能力方法：图像增广\ 图像微调\\
+\textbf{图像增广}
 
+  对图像随机变换，产生相似样本。扩大训练集
+
+  方法：
+
+  \quad 翻转：有固定几率上下/左右翻转
+
+  \quad 裁剪：随机裁剪原图10\%-100\%面积的图像，宽高比0.5-2，并拉伸至固定像素大小
+
+  \quad 变化颜色：调整亮度\ 色调\ 对比度\ 饱和度\\
+\textbf{微调}
+
+  假设：
+
+  \quad 源模型包含的知识和目标模型紧密相连
+  
+  \quad 源模型输出层不能直接用于目标模型
+
+  \quad 目标数据集远小于源数据集
+
+  方法：
+ 
+  \quad 1. 在源数据集上训练一神经网络，称源模型
+
+  \quad 2. 创建一新神经网络，称目标模型，复制源模型除了输出层的所有结构和参数
+
+  \quad 3. 为目标模型添加输出层，节点数对应输出种类，随机初始化模型参数
+
+  \quad 4. 在目标数据集上训练目标模型，微调hidden layer参数，从头训练输出层参数
+
+  \quad \quad 通过提高输出层学习率，降低隐藏层学习率达到重新训练输出层，微调隐藏层的目的。学习率相差可达1000倍\\
+\textbf{目标检测}
+
+  锚框：标记一个物体的范围框
+
+  交并比IoU：两锚框\ 相交面积/相并面积
+
+  训练集：每一锚框有对应的目标的标签\ 相对目标范围框的偏移
+
+  \quad 赋目标框
+
+  \quad \quad 1. 对锚框组$A_1, A_2, ...A_n$，目标框组$B_1, B_2, ...B_m$定义矩阵X，
+
+  \quad \quad \quad X为(n, m)，包含每一锚框相对每一目标框的交并比
+
+  \quad \quad 2. 找到X中值最大项$x_{ij}$，则$A_i$对应目标$B_j$，移除X中$i$行$j$列
+
+  \quad \quad 3. 重复找到剩余矩阵中的最大项并移除，最终有$m$锚框对应目标，剩余$n-m$锚框
+
+  \quad \quad 4. 对每一未对应锚框$A_i$，寻找X中i行最大交并比，若值大于阈值，为$A_i$分配对应目标框，若没有交并比大于阈值，目标框为整个图片。
+
+  \quad \quad 被赋予目标框的锚框称正类锚框，否则为负类锚框
+
+  \quad 赋偏移量
+
+  \quad \quad 对锚框$A_i$有$(x_a, y_a, h_a, w_a)$，对应目标框$B_j$有$(x_b, y_b, h_b, w_b)$
+
+  \quad \quad 设置常数$\mu_x = \mu_y = \mu_w = \mu_h = 0$, $\sigma_x = \sigma_y = 0.1$, $\sigma_w = \sigma_h = 0.2$
+
+  \quad \quad 偏移量为$(\frac{\frac{x_b - x_a}{w_a} - \mu_x}{\sigma_x},\frac{\frac{y_b - y_a}{h_a} - \mu_y}{\sigma_y}, \frac{log(\frac{w_b}{w_a}) - \mu_w}{\sigma_w}, \frac{log(\frac{h_b}{h_a}) - \mu_h}{\sigma_h})$\\
+
+  非极大值抑制：non-maximum suppression
+
+  \quad 去除重复对一个物体分类的锚框
+
+  \quad 锚框置信度：一个锚框$A_i$针对所有目标锚框$B$计算概率，$A_i$最大概率符合的目标锚框对应$A_i$的预测类别，此最大概率为$p$
+
+  \quad 算法：
+
+  \quad \quad 1. 计算每一锚框置信度，选取最高的锚框$A_i$
+
+  \quad \quad 2. 将所有和$A_i$交并比高于阈值的锚框删除
+
+  \quad \quad 重复1.2.步，直至没有锚框剩余
+
+  多尺度目标检测：
+
+  \quad 
 
 
   
