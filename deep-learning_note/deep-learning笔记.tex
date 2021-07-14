@@ -627,7 +627,7 @@
 
   \quad \quad 重复1.2.步，直至没有锚框剩余
 
-  多尺度目标检测：仅适用部分像素点作为锚框的中心，减少锚框数量，减少计算\\
+  多尺度目标检测：仅适用部分像素点作为锚框的中心，减少锚框数量，减少计算\\\\
 \textbf{SSD 单发多框检测}
 
   \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
@@ -690,7 +690,48 @@
   \quad \textbf{得到训练集}
 
   \quad \quad 对于5层中所有使用过的锚框，使用\textbf{目标检测}章节的算法对每一锚框添加标签\ 偏移量。添加结束的训练集和输出集元素一一对应。\\
-\textbf{区域卷积神经网络}
+\textbf{R-CNN 区域卷积神经网络}
+
+  对每一提议区域做卷积神经网络训练，耗时长\\
+\textbf{Fast R-CNN}
+
+  \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+    \centering %图片居中
+    \includegraphics[width=0.6\textwidth]{note_images/Fast_R-CNN.png} %插入图片，[]中设置图片大小，{}中是图片文件名
+  \end{figure}
+
+  与\texttt{R-CNN}区别：
+
+  \quad 1.提取特征的神经网络为整个图像
+
+  \quad \quad 当输入为一张图片时，输出形状为$(1, c, h_1, w_1)$
+
+  \quad 2.选择性搜索$n$个提议区域，
+
+  \quad 3.兴趣区域池化层\ 输出$(n, c, h_2, w_2)$
+
+  \quad \quad 可指定池化窗口任意矩形区域作为一个池化结果的源，所以可产生任意形状池化结果
+
+  \quad \quad 例：
+    $\begin{bmatrix}
+      x_{11} & x_{12} & x_{13} \\
+      x_{21} & x_{22} & x_{23} \\
+      x_{31} & x_{32} & x_{33}
+      \end{bmatrix}$
+    可取$\begin{bmatrix}
+      x_{11} & x_{12} \\
+      x_{21} & x_{22} 
+      \end{bmatrix}$
+    和$\begin{bmatrix}
+      x_{31} & x_{32}
+      \end{bmatrix}$
+    做输出$y_{11}$和$y_{21}$的来源
+
+  \quad 4.全连接层\ 输出变为$(n, d)$，$d$为超参数
+
+  \quad 5.预测类型使用$softmax回归$，输出$(n, q)$
+
+  \quad \quad 预测边界框时，输出$(n, 4)$
 
 
 
