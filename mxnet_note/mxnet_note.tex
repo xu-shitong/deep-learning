@@ -16,8 +16,8 @@
 % |                              import                                |
 % ----------------------------------------------------------------------
 \section{imports}
-\noindent \texttt{from mxnet import }\\
-\texttt{from mxnet.gluon import }\\
+\noindent \texttt{from mxnet import init, image}\\
+\texttt{from mxnet.gluon import nn, model\_zoo}\\
 \texttt{from d2lzh import show\_bboxes}
 
 % ----------------------------------------------------------------------
@@ -97,6 +97,9 @@
   index取值操作，同X$[v_1][v_2][v_3]...[v_n]$
 
   当$v_i$为n:m时，代表范围$[n, m)$\\
+\texttt{X.transpose(($d_0$, $d_1$, ...))}
+
+  转置张量，改变张量的shape，第一维在原$X$的$d_0$维上遍历元素，第二维在原$X$的$d_1$上遍历\\
 \texttt{X.asnumpy()} // 转换成python list\\
 \texttt{nd.stack($x_1$, $x_2$, ...)} // 根据提供的子张量，构造高维的张量
 \texttt{nd.add\_n($x_1$, $x_2$, ...)} // 多个NDArray相加，等同$x_1 + x_2 + ...$\\
@@ -198,9 +201,11 @@
   
   \quad WD = \texttt{wd:'wd'}，使用权重衰减\\
 \texttt{dataset = gdata.ArrayDataset(features, labels)}\\
-\texttt{data\_iter = gdata.DataLoader(dataset, batch\_size, shuffle=True, num\_workers)}
+\texttt{data\_iter = gdata.DataLoader(dataset, batch\_size, shuffle=True, last\_batch='discard', num\_workers)}
 
-  按批量读取数据，\texttt{num\_workers}代表使用的额外处理器数，0代表没有额外处理器\\
+  按批量读取数据，\texttt{num\_workers}代表使用的额外处理器数，0代表没有额外处理器
+  
+  last\_batch='discard' 当不能将数据集等分进批量中时，忽略余下数据集\\
 \texttt{trainer.step(batch\_size)}
 
   调用优化函数，取batch\_size个sample做一步训练\\
@@ -336,9 +341,34 @@
 
   LABELS python string数组，长度为\texttt{n}，对应BBOXES个数
 
-  COLORS = \texttt{'k'} 颜色为黑，为空则使用默认不同颜色
+  COLORS = \texttt{'k'} 颜色为黑，为空则使用默认不同颜色\\
+\texttt{show\_images(IMGS, Y, X)}
 
+  同时显示多个图片，IMGS为一python数组的img
+
+  Y X指定输出的图片行数\ 列数\\
+\texttt{feature, label = voc\_rand\_crop(FEATURE, LABEL, HEIGHT, WIDTH)}
+
+  \texttt{FEATURE} \texttt{LABEL}都为img
+
+  随机选取\texttt{FEATURE}和\texttt{LABEL}中\texttt{(HEIGHT, WIDTH)}大小的一部分像素，作为\texttt{feature} \texttt{label}两个img返回
   
+  \texttt{feature} \texttt{label}坐标位置相同，如分别为\texttt{FEATURE} \texttt{LABEL} \texttt{(10, 20)}像素位置开始的图片\\
+\texttt{voc\_img\_set = VOCSegDataset(IS\_TRAIN, CROP\_SIZE, VOC\_DIR, COLORMAP2LABEL)}
+
+  将VOC图像集合封装进python类，\texttt{VOCSegDataset} extends \texttt{gdata.DataSet}。可以直接调用\texttt{gdata.DataLoader(voc\_img\_set, ...)}
+
+  IS\_TRAIN = \texttt{is\_train=True} 类包含的是测试还是训练集合
+
+  CROP\_SIZE = \texttt{(h, w)} 图像预处理得到的随机小图大小
+
+  VOC\_DIR = \texttt{'/path...'} VOC2012文件夹所在位置
+
+  COLORMAP2LABEL 为python 1维数组，记录$256^3$种颜色对应的标签index\\
+\texttt{conv\_trans = nn.Conv2DTranspose(通道数, kernel\_size=4, padding=1, strides=2)}\\
+\texttt{conv]\_trans.initialize(init.Constant(bilinear\_kernel(CHANNEL_NUM_IN, CHANNEL_NUM_OUT=conv\_trans通道数, kernel\_size=4)))}\\
+
+  初始化转置卷积层
 % ----------------------------------------------------------------------
 % |              convolutional neural network卷积神经网络                |
 % ----------------------------------------------------------------------
