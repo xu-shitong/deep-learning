@@ -1,7 +1,7 @@
 from numpy.core import numeric
 import d2lzh 
-from mxnet import nd, init, image
-from mxnet.gluon import model_zoo, nn
+from mxnet import nd, init, image, gluon
+from mxnet.gluon import model_zoo, nn, loss as gloss, data as gdata
 import numpy as np
 
 def bilinear_kernel(in_channels, out_channels, kernel_size): 
@@ -39,11 +39,27 @@ net.add(nn.Conv2DTranspose(channel_num, kernel_size=64, padding=16, strides=32))
 net[-1].initialize(init=init.Constant(bilinear_kernel(channel_num, channel_num, 64)))
 
 
+voc_dir = "../voc-2012/VOCdevkit/VOC2012"
+crop_size, batch_size, colormap2label = (320, 480), 32, nd.zeros(256**3)
+train_iter = gdata.DataLoader(
+             d2lzh.VOCSegDataset(True, crop_size, voc_dir, colormap2label), batch_size,
+             shuffle=True, last_batch='discard')
+test_iter = gdata.DataLoader(
+             d2lzh.VOCSegDataset(False, crop_size, voc_dir, colormap2label), batch_size,
+             last_batch='discard')
+loss = gloss.SoftmaxCrossEntropyLoss(axis=1)
+trainer = gluon.Trainer(net.collect_params(), 'sgd', {'learning_rate': 0.1,
+                                                      'wd': 1e-3})
+d2lzh.train(train_iter, test_iter, net, loss, trainer, ctx=d2lzh.try_gpu(), num_epochs=5)
+
+
+
 # get image, trial on transpose convolusion network
 img = image.imread('../voc-2012/VOCdevkit/VOC2012/JPEGImages/2007_000027.jpg')
 X = img.astype('float32').transpose((2, 0, 1)).expand_dims(axis=0) / 255
 Y = net(X)
-out_img = nd.argmax(Y[0], axis=0).transpose((1, 2, 0))
+out_img_index = nd.argmax(Y[0], axis=0).astype('int32')
+out_img = nd.array(d2lzh.VOC_COLORMAP)[out_img_index].astype('uint8')
 
 d2lzh.set_figsize()
 print('input image shape:', img.shape) 

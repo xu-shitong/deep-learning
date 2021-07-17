@@ -97,6 +97,9 @@
   index取值操作，同X$[v_1][v_2][v_3]...[v_n]$
 
   当$v_i$为n:m时，代表范围$[n, m)$\\
+\texttt{X[Y]}
+
+  将\texttt{Y}中所有元素作为\texttt{index}，在\texttt{X}中寻找对应元素替换进张量\texttt{Y}对应位置\\
 \texttt{X.transpose(($d_0$, $d_1$, ...))}
 
   转置张量，改变张量的shape，第一维在原$X$的$d_0$维上遍历元素，第二维在原$X$的$d_1$上遍历\\
