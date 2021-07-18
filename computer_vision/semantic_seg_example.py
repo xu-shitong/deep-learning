@@ -38,7 +38,7 @@ net[-1].initialize(init=init.Xavier())
 net.add(nn.Conv2DTranspose(channel_num, kernel_size=64, padding=16, strides=32))
 net[-1].initialize(init=init.Constant(bilinear_kernel(channel_num, channel_num, 64)))
 
-
+# 4. training
 voc_dir = "../voc-2012/VOCdevkit/VOC2012"
 crop_size, batch_size, colormap2label = (320, 480), 32, nd.zeros(256**3)
 train_iter = gdata.DataLoader(
@@ -52,19 +52,20 @@ trainer = gluon.Trainer(net.collect_params(), 'sgd', {'learning_rate': 0.1,
                                                       'wd': 1e-3})
 d2lzh.train(train_iter, test_iter, net, loss, trainer, ctx=d2lzh.try_gpu(), num_epochs=5)
 
-
-
-# get image, trial on transpose convolusion network
+# 5. get image, show output
 img = image.imread('../voc-2012/VOCdevkit/VOC2012/JPEGImages/2007_000027.jpg')
 X = img.astype('float32').transpose((2, 0, 1)).expand_dims(axis=0) / 255
 Y = net(X)
 out_img_index = nd.argmax(Y[0], axis=0).astype('int32')
 out_img = nd.array(d2lzh.VOC_COLORMAP)[out_img_index].astype('uint8')
 
-d2lzh.set_figsize()
+# d2lzh.set_figsize()
 print('input image shape:', img.shape) 
-d2lzh.plt.imshow(img.asnumpy())
+# d2lzh.plt.imshow(img.asnumpy())
 
-print('output image shape:', out_img.shape) 
-d2lzh.plt.imshow(out_img.asnumpy())
+print('output image shape:', out_img.shape)
+
+print([img, out_img][0])
+# d2lzh.plt.imshow(out_img.asnumpy())
+d2lzh.show_images([img, out_img, img, out_img], 2, 2)
 d2lzh.plt.show()

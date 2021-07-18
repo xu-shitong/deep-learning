@@ -31,6 +31,6 @@ for i in range(0,5):
   feature, label = d2lzh.voc_rand_crop(train_feature[0], train_labels[0], 225, 225)
   imgs[0].append(feature)
   imgs[1].append(label)
-d2lzh.show_images(imgs[0] + imgs[1], 2, 5)
+d2lzh.show_images(imgs[0] + imgs[1], 1, 5)
 
 d2lzh.plt.show()
