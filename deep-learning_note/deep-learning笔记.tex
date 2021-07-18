@@ -403,14 +403,8 @@
   $P(w_1, w_2,...,w_T)\approx \prod_{t=1}^{T} P(w_t|w_{t-(n-1)},...,w_{t-1})$
 
   称n元语法，每一$w_t$为一时间步中出现的词\\
-\textbf{循环神经网络}
-
-  隐藏层$H_t = \phi(X_tW_{xh} + H_{t-1}W_{hh} + b_h)$
-
-  \quad $H_{t-1}W_{hh}$项将隐藏层前一次输出纳入此次计算
-
-  输出$O = HW_{hq} + b_q$\\
 \textbf{处理语言模型}：将每一文字转化为索引，使用索引做训练参数集\\
+\textbf{one\_hot表示}：索引为$i$的词对应one\_hot向量$[v_0 = 0, v_1 = 0, ..., v_i = 1, v_{i+1} = 0, ...]$\\
 \textbf{采样方式}：
 
   $BATCH\_SIZE$ 每次采集的样本数
@@ -440,7 +434,41 @@
 \textbf{困惑度}
 
   = exp(交叉熵损失函数值)\\
-\textbf{** RNN实现 **}\\
+\textbf{RNN实现}
+
+  模型：
+
+  \quad 1.隐藏层$H_t = \phi(X_tW_{xh} + H_{t-1}W_{hh} + b_h)$
+
+  \quad \quad $X_t$为上一时间步的词
+
+  \quad \quad $H_{t-1}$项为隐藏层前一次输出，第一个时间步使用全零$H_{t-1}$矩阵
+
+  \quad 2.输出层$O = HW_{hq} + b_q$
+  
+  实现：
+  
+  \quad 输入：(批量大小, 时间步数) 每一元素为词的编号
+  
+  \quad \quad 输入转换为\ 时间步数 * (批量大小, 词典大小) 个矩阵，第$i$矩阵第$j$行对应\ 批量中第$j$样本\ 第$i$时间步的词的one\_hot向量
+  
+  \quad 激活函数使用$tanh$
+  
+  \quad 计算：
+
+  \quad \quad $H_t = \phi(X_tW_{xh} + H_{t-1}W_{hh} + b_h)$
+
+  \quad \quad $O = HW_{hq} + b_q$
+  
+  \quad \quad 遍历前多个时间步的(批量大小, 词典大小)矩阵，每一时间步矩阵即$X_t$。
+  
+  \quad \quad 训练时输入一段时间步$[w_{t0}, w_{t1}]$，输出即为预测$[w_{t0+1}, w_{t1+1}]$的词
+  
+  \quad \quad \quad \textbf{1.输出的词在$[w_{t0+1}, w_{t1}]$时间步不一定和训练集一致}
+
+  \quad \quad \quad \textbf{2.输出为$(t1+1) - (t0+1)$个时间步的预测词，每个词使用one\_hot向量表示}
+  
+  \quad \quad 代价函数使用 $(t1+1) - (t0+1)$个时间步one\_hot表示\ 和\ 每一$[w_{t0+1}, w_{t1}]$时间内词的one\_hot表示\ 的交叉熵\\
 \textbf{通过时间反向传播}
 
   \textbf{有关时间步的损失函数}：$L = \frac{1}{T}\sum_{t = 1}^{T} l(o_t, y_t) $
