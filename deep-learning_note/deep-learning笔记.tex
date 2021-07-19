@@ -549,7 +549,7 @@
 
   \quad \quad \quad $H_i = (H_i^{(f)}, H_i^{(b)})$，为正向\ 反向隐藏层的输出concat
 
-  
+
 % --------------------------------------------------------------------------
 % |                             代码算法优化                                 |
 % --------------------------------------------------------------------------
@@ -898,10 +898,67 @@
 
   \quad 使用每一VGG块的第一卷积层做样式层，第四卷积块的最后一卷积层做内容层
 
-
-
-
+% --------------------------------------------------------------------------
+% |                             自然语言识别                                 |
+% --------------------------------------------------------------------------
+\section{自然语言识别}
+\noindent \textbf{词嵌入}：将词和实数向量对应，词间夹角$\frac{x^Ty}{||x||\space||y||} \in [-1, 1]$为词的相似度\\
+\textbf{跳字模型}：
   
+  基于一个\textbf{中心词}生成才其周围的多个\textbf{背景词}
+
+  定义：
+
+  \quad $\mathcal{V} $：所有词的索引集合
+
+  \quad $w_i$：一个词，索引为$i$
+
+  \quad $v_i$：词$w_i$对应的实数向量
+
+  \quad 背景窗口大小$n$：背景词$\in$中心词左$n$ + 右$n$的范围
+
+  \textbf{似然函数}：代表一段词序发生的可能性
+
+  \quad 给定中心词$w_c$，有单个背景词$w_o$的概率$P(w_o | w_c) = \frac{exp(u_o^Tv_c)}{\sum_{i\in\mathcal{V} } exp(u_i^Tv_c)}$
+
+  \quad 对中心词$w_c$，产生所有窗口内的背景词的概率为(假设背景词间independent)$P(c) = \prod_{c-n<j<c+n} P(w_j | w_c)$
+
+  \quad (假设每一中心词产生背景词的可能性independent) 产生整个词序$S$的可能性：
+  
+  \quad \quad $P(S) = \prod_{0\leq c \leq |S|} P(c) = \prod_{c = 0}^{|S|-1} \prod_{j = c-n, j \neq c}^{c+n} P(w_j | w_c)$
+  
+  \textbf{代价函数}：基于似然函数，高似然代表低代价函数值
+
+  \quad $J = -log(P(S)) = -\sum_{c = 0}^{|S|-1} \sum_{j = c-n, j \neq c}^{c+n} log(P(w_j | w_c))$
+
+  \quad 求导： $\frac{d J}{d v_c} = -\sum_{c = 0}^{|S|-1} \sum_{j = c-n, j \neq c}^{c+n} \frac{d P(w_j | w_c)}{d v_c}$
+
+  \quad \quad 对于每一中心词$v_c$有$\frac{d P(w_j | w_c)}{d v_c} = u_o^T - \sum_{j\in\mathcal{V}}P(w_j | w_c)u_j$\\
+\textbf{连续词袋模型}
+
+  同跳字模型有中心词\ 背景词，有$P(w_o | w_c) = \frac{exp(u_o^Tv_c)}{\sum_{i\in\mathcal{V} } exp(u_i^Tv_c)}$不同处：中心词由背景词产生，和跳字模型相反
+
+  给定背景词$W_o = w_{o_1}, w_{o_2}, ..., w_{o_{2m}}$，中心词$w_c$有出现概率：
+  
+  \quad $P(w_c | w_{o_1}, ..., w_{o_{2m}}) = \frac{exp(\frac{1}{2m}u_c^T(v_{o_1} + ... + v_{o_{2m}}))}{\sum_{i\in \mathcal{V} } exp(\frac{1}{2m}u_i^T(v_{o_1} + ... + v_{o_{2m}}))}$
+
+  \quad \quad $= \frac{exp(u_c^T\bar{v}_o)}{\sum_{i\in \mathcal{V} } exp(u_i^T\bar{v}_o )}$
+
+  \quad 1.使用\texttt{postierior estimate}计算得到，忽视$P(w_c)$项
+
+  \quad 2.$\frac{1}{2m}$项为额外添加，使$\bar{v}_o = \frac{(v_{o_1} + ... + v_{o_{2m}})}{2m}$
+  
+  \textbf{似然函数}：
+
+  \quad $\prod_{c \in \mathcal{V} } P(w_c | W_o)$
+
+  \textbf{代价函数}：基于似然函数，高似然代表低代价函数值
+
+  \quad $J = -log(\prod_{c \in \mathcal{V} } P(w_c | W_o))$
+
+  \quad \quad $= -\sum_{c \in \mathcal{V} } (u_c^T\bar{v}_o - log(\sum_{i\in \mathcal{V} } exp(u_i^T\bar{v}_o )))$
+
+  \quad 求导：$\frac{d J}{d v_{o_i}} = -\frac{1}{2m}(u_c - \sum_{j \in \mathcal{V} }P(w_j | W_o)u_j)$
 % --------------------------------------------------------------------------
 % |                       Deep Learning 第6章笔记                           |
 % --------------------------------------------------------------------------
