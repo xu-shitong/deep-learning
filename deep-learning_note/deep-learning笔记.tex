@@ -477,6 +477,10 @@
 \textbf{GRU 门控循环单元}
 
   替代原计算隐藏状态方法，应对梯度衰减
+  \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+    \centering %图片居中
+    \includegraphics[width=0.6\textwidth]{note_images/GRU.png} %插入图片，[]中设置图片大小，{}中是图片文件名
+  \end{figure}
 
   \textbf{reset gate重置门 update gate更新门}：
 
@@ -497,8 +501,55 @@
   \textbf{隐藏状态}
 
   \quad $H_t = Z_t \odot H_{t-1} + (1-Z_t)\odot \tilde{H_t}$\\
-\textbf{** LSTM长短期记忆 门控循环网络 **}
+\textbf{LSTM长短期记忆 门控循环网络}
+  \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+    \centering %图片居中
+    \includegraphics[width=0.6\textwidth]{note_images/LSTM.png} %插入图片，[]中设置图片大小，{}中是图片文件名
+  \end{figure}
+\textbf{深度循环神经网络}
 
+  包含多个隐藏层的RNN
+  \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+    \centering %图片居中
+    \includegraphics[width=0.6\textwidth]{note_images/deep_RNN.png} %插入图片，[]中设置图片大小，{}中是图片文件名
+  \end{figure}
+  结构：
+
+  \quad 隐藏层\textbf{输出}为$H_i^{(1)} \space H_i^{(2)}...H_i^{(n)}$，第$i$次forward对应图中一行，即$X_i \rightarrow  H_i^{(1)} \rightarrow  ... \rightarrow  H_i^{(n)} \rightarrow O_i$
+
+  \quad 第$i$次计算中：
+
+  \quad \quad $l = 1$ 隐藏层输出 $H_i^{(1)} = \phi (X_iW_{xh}^{(1)} + H_{i-1}^{(l)}W_{hh}^{(1)} + b_h^{(1)})$
+
+  \quad \quad \quad 和单层隐藏层RNN的\ 隐藏层输出公式\ 一致
+
+  \quad \quad $l = 2,3...n$ 隐藏层输出 $H_i^{(l)} = \phi (H_i^{(l-1)}W_{xh}^{(l)} + H_{i-1}^{(l)}W_{hh}^{(l)} + b_h^{(l)})$
+
+  \quad \quad \quad 即$l=1$公式中将输入变为前一隐藏层输出
+
+  \quad \quad 输出层 $O_i = H_{i}^{(n)}W_{hq} + b_q$\\
+\textbf{双向循环神经网络}
+
+  允许神经网络根据前后的词序决定当前时间步的词
+  \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+    \centering %图片居中
+    \includegraphics[width=0.6\textwidth]{note_images/double_deep_RNN.png} %插入图片，[]中设置图片大小，{}中是图片文件名
+  \end{figure}
+  结构：
+
+  \quad 仅有2隐藏层，分为\ 正向隐藏层\ 反向隐藏层，分别输出$H^{(f)}$ $H^{(b)}$
+
+  \quad 第$i$次计算中
+
+  \quad \quad $H_i^{(f)} = \phi (X_iW_{xq}^{(f)} + H_{i-1}^{(f)}W_{hh}^{(f)} + b_h^{(f)})$
+
+  \quad \quad $H_i^{(b)} = \phi (X_iW_{xq}^{(b)} + H_{i+1}^{(b)}W_{hh}^{(b)} + b_h^{(b)})$
+
+  \quad \quad $O_i = H_iW_{hq} + b_q$
+
+  \quad \quad \quad $H_i = (H_i^{(f)}, H_i^{(b)})$，为正向\ 反向隐藏层的输出concat
+
+  
 % --------------------------------------------------------------------------
 % |                             代码算法优化                                 |
 % --------------------------------------------------------------------------
