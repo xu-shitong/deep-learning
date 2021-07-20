@@ -23,7 +23,7 @@
 \textbf{sample样本}：一组特征的取值和对应的标签输出\\
 \textbf{batch}：batch size个sample被分为一组，进行向量化的计算，称$B$\\
 \textbf{hyperparameter超参数}：人为设定的参数。如样本个数（批量大小batch size）$|B|$，学习率$\eta $。少数情况下通过学习得到\\
-\textbf{W 一层layer的权重矩阵} 行数 = 前层节点数，列数 = 当前层节点数
+\textbf{W 一层layer的权重矩阵}：行数 = 前层节点数，列数 = 当前层节点数\\
 \textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接\\
 \textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正\ 2. 值总和为1\\
 \textbf{cross entropy交叉熵}
@@ -60,7 +60,7 @@
 % |                       linear regression线性回归                         |
 % --------------------------------------------------------------------------
 \section{linear regression线性回归}
-\noindent \textbf{平方代价函数}：$J(\theta ) = \frac{1}{n} \sum_{i = 1}^{n} J^{(i)}(\theta )$，为所有样本误差的平均值\\
+\noindent \textbf{平方代价函数}：$J(\theta ) = \frac{1}{n} \sum_{i = 1}^{n} J^{(i)}(\theta ) = \frac{1}{n} \sum_{i = 1}^{n} (\hat{y}^{(i)} - y^{(i)})^2  $，为所有样本误差的平均值\\
 \textbf{迭代}：$\theta_i = \theta_i - \frac{\eta}{|B|}\sum_{j\in B} \frac{d J^{(j)}(\theta)}{d \theta_i}$，即对所有sample训练一次，得到label差值，对每一参数减\ 斜率*学习率\ 的平均值
   
   当使用平方代价函数：
@@ -709,7 +709,7 @@
 
   \quad \quad 设置常数$\mu_x = \mu_y = \mu_w = \mu_h = 0$, $\sigma_x = \sigma_y = 0.1$, $\sigma_w = \sigma_h = 0.2$
 
-  \quad \quad 偏移量为$(\frac{\frac{x_b - x_a}{w_a} - \mu_x}{\sigma_x},\frac{\frac{y_b - y_a}{h_a} - \mu_y}{\sigma_y}, \frac{log(\frac{w_b}{w_a}) - \mu_w}{\sigma_w}, \frac{log(\frac{h_b}{h_a}) - \mu_h}{\sigma_h})$\\
+  \quad \quad 偏移量为$(\frac{\frac{x_b - x_a}{w_a} - \mu_x}{\sigma_x},\frac{\frac{y_b - y_a}{h_a} - \mu_y}{\sigma_y}, \frac{log(\frac{w_b}{w_a}) - \mu_w}{\sigma_w}, \frac{log(\frac{h_b}{h_a}) - \mu_h}{\sigma_h})$
 
   非极大值抑制：non-maximum suppression
 
@@ -919,7 +919,7 @@
 % |                             自然语言识别                                 |
 % --------------------------------------------------------------------------
 \section{自然语言识别}
-\noindent \textbf{词嵌入}：将词和实数向量对应，词间夹角$\frac{x^Ty}{||x||\space||y||} \in [-1, 1]$为词的相似度\\
+\noindent \textbf{一. 词嵌入}：将词和实数向量对应，词间夹角$\frac{x^Ty}{||x||\space||y||} \in [-1, 1]$为词的相似度\\
 定义：
 
   $S$：词序集合，包含多个词序，包含重复的词
@@ -945,7 +945,7 @@
 
   \textbf{似然函数}：代表一段词序发生的可能性
 
-  \quad 对中心词$w_c$，产生所有窗口内的背景词的概率为(假设背景词间independent)$P(c) = \prod_{c-n<j<c+n} P(w_j | w_c)$
+  \quad 对中心词$w_c$，产生所有窗口内的背景词的概率为(假设背景词间$independent$)$P(c) = \prod_{c-n<j<c+n} P(w_j | w_c)$
 
   \quad (假设每一中心词产生背景词的可能性independent) 产生整个词序$S$的可能性：
   
@@ -1013,13 +1013,15 @@
   \quad \quad $t$为超参数
 
   \quad 对每个$w \in S$，使用二次采样随机丢弃$w$，创建新的$S'$作为训练集\\
-\textbf{模型实现}
+\textbf{word2vec词嵌入模型实现}
+
+  目标：得到每一词的词向量，使有关联的词间向量夹角最小
 
   \textbf{嵌入层}
 
   \quad 得到词嵌入的层，输入词$w_i$索引$i$，输出权重矩阵第$i$行作为词向量
 
-  \quad 嵌入层有权重矩阵，形状\texttt{(词典大小, 每个词向量纬度)}\\
+  \quad 嵌入层有权重矩阵，形状\texttt{(词典大小, 每个词向量纬度)}
 
   \textbf{前向计算}
 
@@ -1069,12 +1071,88 @@
 
   \quad 乘法为矩阵乘法，行向量$u_{c_1}^T$ 乘\ 矩阵$[o_{11}, ..., o_{1n}, q_{11}, ..., q_{1k}]$
   
-  \quad 输出张量(b, 1, k+n)，每一元素为背景词\ 噪声词和中心词的点乘，对应计算词向量夹角\\
-\textbf{代价函数}
+  \quad 输出张量(b, 1, k+n)，每一元素为背景词\ 噪声词和中心词的点乘，对应计算词向量夹角
+  
+  \textbf{代价函数}
 
-  使用二元交叉熵函数，传入前向传播结果$P$，label$L$代表样本是否为正样本，掩码$M$代表样本是否有效
+  \quad 使用二元交叉熵函数，传入前向传播结果$P$，label$L$代表样本是否为正样本，掩码$M$代表样本是否有效
 
-  ** 如何联系可能性计算和夹角计算的关系
+  \quad ** 如何联系可能性计算和夹角计算的关系\\
+\textbf{fastText子词嵌入}：基于word2vec优化
+
+  产生子词：在单词首尾添加\texttt{< >}，取所有长度为$s$的子字符串 + 单词本身
+
+  \quad 如，对单词\texttt{'where'}有子词\texttt{\{'<wh', 'whe', 'her', 'ere', 're>', '<where>'\}}
+
+  每一子词都存在词典中，单个词对应的向量为子词向量和\\
+\textbf{GloVe全局向量的词嵌入}：基于word2vec优化
+
+  对每一中心词$w_i$，合并所有$w_i$的背景词，称多重集$\mathcal{C}_i$。多重集直接合并原集合，不删除重复项
+
+  \quad 一个背景词$w_j$在$\mathcal{C}_i$中的出现次数称\ 重数，记做$x_{ij}$
+
+  \quad 定义$x_i = |\mathcal{C}_i|$，为多重集集合大小
+
+  \textbf{代价函数 1}：$J = -\sum_{i\in \mathcal{V} }\sum_{j\in \mathcal{V} }x_{ij} \space log(P(x_j | x_i))$  
+
+  \quad $= -\sum_{i\in \mathcal{V} }x_{i} \sum_{j\in \mathcal{V} } \frac{x_{ij}}{x_i}\space log(P(x_j | x_i))$
+
+  \quad 第二层求和即\ 实际样本中$w_j$出现在$w_i$背景集合中的概率$\frac{x_{ij}}{x_i}$\ 和\ 模型预测的出现概率$P(x_j | x_i)$的交叉熵
+
+  \quad * 较少使用，计算开销较大
+
+  \textbf{代价函数 2}：使用平方代价函数，平方项为$h(x_{ij})(u_j^Tv_i + b_i + c_j -log(x_{ij}))^2$
+
+  \quad $h(x_{ij})$为权重，在$[0, 1]$单调递增
+
+  \quad $b_i$为中心词偏差项，$c_j$为背景词偏差项
+
+  \quad $u_j^Tv_i$即$x_{ij}$，$log(x_{ij})$即$P(x_j|x_i)$除去分子\\
+\textbf{求近义词}：word2vec应用
+
+  使用KNN，在训练结束的词向量中寻找余弦值最小的K个向量\\
+\textbf{求类比词}：word2vec应用
+
+  给定词$w_a, w_b, w_c$，求$w_d$使得$w_a : w_b$关系类似$w_c:w_d$
+
+  算法：使用KNN，寻找向量临近$v_b - v_a + v_c$\\
+\textbf{二. 文本情感分类}
+
+  分析文本作者的情感
+
+  定义：
+
+  \quad 
+
+  输入：多组\ 词序\texttt{长度n} + 标记的情感类型
+
+  \textbf{使用循环神经网络}：
+
+  \quad 1.使用预先训练的嵌入层得到词向量
+
+  \quad 2.双向循环神经网络
+
+  \quad 3.全连接层，得到分类的情感
+
+  \textbf{使用卷积神经网络textCNN}
+
+  \quad 1.使用预先训练的嵌入层得到词向量，每一向量$d$维
+
+  \quad 2.卷积计算：区别仅有\ 使用一维卷积核\ 输入为一维数组，输出通道数 = $d$
+
+  \quad \quad 对多通道输入做一维卷积，可看做将输入通道合并至同一矩阵，使用同一矩阵卷积核。多通道输出则使用多个矩阵卷积核
+
+  \quad \quad 同一输入通道一维卷积核长度相同，不同输出通道可使用不同长度卷积核
+
+  \quad 3.时序最大池化层：一维全局最大池化层，对$d$个输入通道各得出所有时序内最大值。即输出一向量，长度为$d$
+  
+  \quad 4.将所有时序最大池化层结果\texttt{concat}
+
+  \quad 5.全连接层，将\texttt{concat结果分类为情感}\\
+\textbf{seq2seq 编码器-解码器}
+
+  
+
 % --------------------------------------------------------------------------
 % |                       Deep Learning 第6章笔记                           |
 % --------------------------------------------------------------------------

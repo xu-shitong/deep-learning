@@ -17,8 +17,8 @@
 % ----------------------------------------------------------------------
 \section{imports}
 \noindent \texttt{from mxnet import init, image}\\
-\texttt{from mxnet.gluon import nn, model\_zoo}\\
-\texttt{from d2lzh import show\_bboxes}
+\texttt{from mxnet.gluon import nn, model\_zoo, data, loss}\\
+\texttt{from d2lzh import show\_bboxes, show\_fashion\_mnist}
 
 % ----------------------------------------------------------------------
 % |                              NDArray                               |
@@ -259,11 +259,11 @@
   使用定义的函数初始化权重 偏差
 
 % ----------------------------------------------------------------------
-% |                     图像分类数据集fashion-MINST                      |
+% |                     图像分类数据集fashion-MNIST                      |
 % ----------------------------------------------------------------------
-\section{图像分类数据集fashion-MINST}
+\section{图像分类数据集fashion-MNIST}
 \noindent \texttt{from mxnet.gluon import data as gdata}\\
-\texttt{mnist\_train = gdata.version.FashionMINST(train=True)} 
+\texttt{mnist\_train = gdata.vision.FashionMNIST(train=True)} 
 
   得到数据集, \texttt{train=True}为训练数据集，否则为测试训练集\\
 \texttt{features, label = mnist\_train[i:j]}
@@ -349,7 +349,7 @@
 
   同时显示多个图片，IMGS为一python数组的img
 
-  Y X指定输出的图片行数\ 列数，\textbf{X Y都不为0，否则无法创建subplot，报错}\\
+  Y X指定输出的图片行数\ 列数，\textbf{X Y都不为1，否则无法创建subplot，报错}\\
 \texttt{feature, label = voc\_rand\_crop(FEATURE, LABEL, HEIGHT, WIDTH)}
 
   \texttt{FEATURE} \texttt{LABEL}都为img
