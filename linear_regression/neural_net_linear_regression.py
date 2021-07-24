@@ -1,42 +1,54 @@
-from mxnet import nd, init, gluon, autograd
-from mxnet.gluon import nn, loss as gloss 
-from mxnet.gluon import data as gdata
+import mxnet 
+from mxnet import nd, autograd, init
+from mxnet.gluon import data as gdata, loss as gloss, nn
+import d2lzh
 
-FEATURE_NUM = 2
-SAMPLE_NUM = 1000
-true_w = nd.array([2, -3.4])
-true_b = 4.2
-# generate training dataset
-features = nd.random.normal(0, 1, shape=(SAMPLE_NUM, FEATURE_NUM))
-labels = nd.dot(features, true_w.T)
+# define true parameters
+W = nd.array([3,4])
+b = 0.5
 
-labels = labels + true_b
-labels += nd.random.normal(0, 0.01, shape=labels.shape)
+# create training dataset
+train_size = 1000
+features_train = nd.random.normal(0, 1, shape=(train_size, W.shape[0]))
+labels_train = nd.dot(features_train, W.T) + b
+labels_train += nd.random.normal(0, 0.01, shape = labels_train.shape)
 
-ITERATION_NUM = 3
-batch_size = 10
+# create test dataset
+test_size = 10
+features_test = nd.random.normal(0, 1, shape=(test_size, W.shape[0]))
+labels_test = nd.dot(features_test, W) + b 
+labels_test += nd.random.normal(0, 0.01, shape = labels_test.shape)
 
-# setup neural network
-net = nn.Sequential()
-net.add(nn.Dense(1))
-net.initialize(init.Normal(sigma = 0.3))
+# # plot features
+# d2lzh.plt.scatter(features_train.T[0].asnumpy(), labels_train.T.asnumpy(), 1)
+# d2lzh.plt.show()
+
+# define training parameters
+BATCH_SIZE = 10
+ITERATION_COUNT = 10
+LEARNING_RATE = 0.03
+net = nn.Dense(1)
+net.initialize(init=init.Normal(sigma=0.01))
+
+# training
+dataset = gdata.ArrayDataset(features_train, labels_train)
+data_iter = gdata.DataLoader(dataset, BATCH_SIZE, shuffle=True)
 loss = gloss.L2Loss()
-train = gluon.Trainer(net.collect_params(), 'sgd', {'learning_rate': 0.03})
-dataset = gdata.ArrayDataset(features, labels)
-data_iter = gdata.DataLoader(dataset, batch_size, shuffle=True)
-
-for i in range(1, ITERATION_NUM + 1):
-  count = 0
-  for X, y in data_iter:
+trainer = mxnet.gluon.Trainer(net.collect_params(), 'sgd', {'learning_rate': LEARNING_RATE})
+for i in range(ITERATION_COUNT):
+  acc_loss = 0
+  for feature, label in data_iter:
     with autograd.record():
-      l = loss(net(X), y)
-    
-    # print(f"loss vector = {l}")
-    print(f"count={count}")
+      y_hat = net(feature)
+      l = loss(y_hat, label)
     l.backward()
-    train.step(batch_size)
-    count += 1
 
-  l = loss(net(features), labels).mean().asnumpy()
-  print('epoch %d, loss: %f' % (i, l))
-print(net)
+    trainer.step(BATCH_SIZE)
+    acc_loss += l.sum()
+  print(f"iteration {i+1} accumulated loss: {acc_loss}")
+
+print(f"training result: w: {net.weight.data()}, d: {net.bias.data()}")
+
+# get loss on test data 
+l = loss(net(features_test), labels_test)
+print(f"average loss on test data: {l.mean()}")

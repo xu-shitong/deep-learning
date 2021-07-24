@@ -16,7 +16,7 @@
 % |                              import                                |
 % ----------------------------------------------------------------------
 \section{imports}
-\noindent \texttt{from mxnet import init, image}\\
+\noindent \texttt{from mxnet import init, image, autograd}\\
 \texttt{from mxnet.gluon import nn, model\_zoo, data, loss}\\
 \texttt{from d2lzh import show\_bboxes, show\_fashion\_mnist}
 
@@ -27,7 +27,13 @@
 
 \noindent \texttt{from mxnet import nd}\\
 \texttt{x = nd.arange(12)} // 创建一个长度为12的行向量，类型为NDArray 12\\
-\texttt{x.shape} // 返回(m, n)，代表x为 m行n列 矩阵。对于向量，行数或列数不存在\\
+\texttt{x.shape}
+  
+  返回(m, n)，代表x为 m行n列 矩阵。对于向量，行数或列数不存在
+
+  \textbf{所有(n,)形状点乘时看做列向量，否则和(n, 1)矩阵用法不同}
+  
+  \textbf{(n, 1)矩阵和(n,)向量计算非元素计算}\\
 \texttt{x.size} // 返回矩阵中元素个数\\
 \texttt{x.reshape((m', n'))}
 
@@ -50,9 +56,11 @@
   得到python list类型的矩阵，返回NDArray类型的矩阵
   
   输入可以是python常数，但随后计算会报错\\
-\texttt{nd.random.normal($\mu, \sigma$， shape=($v_1, v_2, v_3, ..., v_n$))}
+\texttt{nd.random.normal($\mu, \sigma$, shape=($v_1, v_2, v_3, ..., v_n$))}
 
-  随机生成张量，元素值$\sim N(\mu, \sigma)$\\\\
+
+  随机生成张量，元素值$\sim N(\mu, \sigma)$\\
+\texttt{nd.random.uniform(low, high, shape=($v_1, v_2, v_3, ..., v_n$))}\\\\
 \texttt{X + - * / Y}
 
   张量element-wise操作
@@ -153,7 +161,7 @@
 \noindent \texttt{from mxnet.gluon import nn}\\
 \texttt{from mxnet import init}\\
 \texttt{from mxnet.gluon import loss as gloss}\\
-\texttt{net = nn.Dense(2, IN\_UNITS, ACTIVATION)}
+\texttt{net = nn.Dense(2, IN\_UNITS*, ACTIVATION*)}
 
   创建一个全连接层，包含2个节点
 
@@ -166,7 +174,7 @@
   add中可同时包含多个层
   
   nn.Dropout()为丢弃法使用的丢弃层。定义前一层的权重有PROB几率被清零，1-p几率被拉伸\\
-\texttt{net.initialize(INIT, FORCE\_REINIT)} 
+\texttt{net.initialize(INIT, FORCE\_REINIT*)} 
 
   初始化层内的参数，随后调用\texttt{net(X)}得到全连接层对输入矩阵X的输出
   
@@ -187,10 +195,11 @@
   直接访问权重
 
   net[i].weight.data() 得到NDArray类型的权重矩阵\\
+\texttt{net[i].bias} // 得到偏差值，\texttt{.data()}得到NDArray矩阵\\
 \texttt{loss = gloss.L2Loss()}
   
   定义损失函数为平方损失函数，loss为一函数\\
-\texttt{trainer = gluon.Trainer(net.collect\_params(NAME), 'sgd', {'learning\_rate': 0.03}, WD)}
+\texttt{trainer = gluon.Trainer(net.collect\_params(NAME), 'sgd', \{'learning\_rate': 0.03\}, WD)}
 
   定义每一步优化函数，使用sgd梯度下降
   
@@ -369,7 +378,7 @@
 
   COLORMAP2LABEL 为python 1维数组，记录$256^3$种颜色对应的标签index\\
 \texttt{conv\_trans = nn.Conv2DTranspose(通道数, kernel\_size=4, padding=1, strides=2)}\\
-\texttt{conv]\_trans.initialize(init.Constant(bilinear\_kernel(CHANNEL_NUM_IN, CHANNEL_NUM_OUT=conv\_trans通道数, kernel\_size=4)))}\\
+\texttt{conv]\_trans.initialize(init.Constant(bilinear\_kernel(CHANNEL\_NUM\_IN, CHANNEL\_NUM\_OUT=conv\_trans通道数, kernel\_size=4)))}\\
 
   初始化转置卷积层
 % ----------------------------------------------------------------------

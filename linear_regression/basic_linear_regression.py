@@ -1,46 +1,68 @@
-from numpy.core.fromnumeric import shape
-from mxnet import autograd, nd 
-from d2lzh import plt, linreg
+from mxnet import nd, autograd
+from mxnet.gluon import data as gdata 
+import d2lzh
 
-FEATURE_NUM = 2
-SAMPLE_NUM = 1000
-true_w = nd.array([2, -3.4])
-true_b = 4.2
+# define true parameters
+W = nd.array([3,4])
+b = 0.5
 
-# generate training dataset
-features = nd.random.normal(0, 1, shape=(SAMPLE_NUM, FEATURE_NUM))
-labels = nd.dot(features, true_w.T)
-labels = labels + true_b
-labels += nd.random.normal(0, 0.1, shape=labels.shape)
+# create training dataset
+train_size = 1000
+features_train = nd.random.normal(0, 1, shape=(train_size, W.shape[0]))
+labels_train = nd.dot(features_train, W.T) + b
+labels_train += nd.random.normal(0, 0.01, shape = labels_train.shape)
 
-# parameters to be trained
-w = nd.random.normal(0, 1, shape=(FEATURE_NUM, 1))
-d = nd.zeros(shape=(1,))
-w.attach_grad()
-d.attach_grad()
+# create test dataset
+test_size = 10
+features_test = nd.random.normal(0, 1, shape=(test_size, W.shape[0]))
+labels_test = nd.dot(features_test, W) + b 
+labels_test += nd.random.normal(0, 0.01, shape = labels_test.shape)
 
-# training using square loss function
-def forward(X, w, d):
-  return nd.dot(X, w) + d
+# # plot features
+# d2lzh.plt.scatter(features_train.T[0].asnumpy(), labels_train.T.asnumpy(), 1)
+# d2lzh.plt.show()
 
-def square_loss(labels, hat_labels):
-  return (labels - hat_labels.reshape(labels.shape)) ** 2 / 2
+# define training parameters
+BATCH_SIZE = 10
+ITERATION_COUNT = 10
+LEARNING_RATE = 0.3
+W_train = nd.random.normal(0, 1, shape=W.shape).reshape((W.shape[0], 1))
+W_train.attach_grad()
+b_train = nd.array([0])
+b_train.attach_grad()
 
-# calculate new parameter after one iteration
-def sgd(params):
-  for param in params:
-    param[:] = param - LEARNING_RATE * param.grad / SAMPLE_NUM
+# define forward function
+def forward(W, b, x):
+  return nd.dot(x, W) + b
 
-REGRESSION_NUM = 3 # iteration of regression time
-LEARNING_RATE = 1 
-for i in range(REGRESSION_NUM):
+# define square loss function
+def loss(y, y_hat):
+  return nd.power(y - y_hat.reshape(y.shape), 2) / 2
 
-  with autograd.record():
-    temp = forward(features, w, d)
-    loss = square_loss(labels, temp)
-  loss.backward()
+# define parameter update function
+def update(W_train, b_train):
+  W_train[:] -= W_train.grad * LEARNING_RATE / BATCH_SIZE
+  b_train[:] -= b_train.grad * LEARNING_RATE / BATCH_SIZE
 
-  sgd([w, d])
-  print(f"epoch {i}, loss {square_loss(forward(features, w, d), labels).mean().asnumpy()}")
+# training
+dataset = gdata.ArrayDataset(features_train, labels_train)
+data_iter = gdata.DataLoader(dataset, BATCH_SIZE, shuffle=True)
+for i in range(ITERATION_COUNT):
 
-print(w, d)
+  acc_loss = 0
+  for feature, label in data_iter:
+    with autograd.record():
+      y_hat = forward(W_train, b_train, feature)
+      l = loss(label, y_hat)
+
+    l.backward()
+    update(W_train, b_train)
+
+    acc_loss += l.sum()
+  print(f"iteration {i+1} has acc loss: {acc_loss}")
+
+print(f"final parameters are: W: {W_train}, b: {b_train}")
+
+# get loss on test data
+y_hat = loss(forward(W_train, b_train, features_test), labels_test)
+print(f"average loss on test data: {y_hat.mean()}")

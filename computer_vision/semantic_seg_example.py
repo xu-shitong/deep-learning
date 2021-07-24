@@ -52,20 +52,22 @@ trainer = gluon.Trainer(net.collect_params(), 'sgd', {'learning_rate': 0.1,
                                                       'wd': 1e-3})
 d2lzh.train(train_iter, test_iter, net, loss, trainer, ctx=d2lzh.try_gpu(), num_epochs=5)
 
-# 5. get image, show output
-img = image.imread('../voc-2012/VOCdevkit/VOC2012/JPEGImages/2007_000027.jpg')
-X = img.astype('float32').transpose((2, 0, 1)).expand_dims(axis=0) / 255
-Y = net(X)
-out_img_index = nd.argmax(Y[0], axis=0).astype('int32')
-out_img = nd.array(d2lzh.VOC_COLORMAP)[out_img_index].astype('uint8')
+print(f"layer 0 params are : {net[0].params}")
 
-# d2lzh.set_figsize()
-print('input image shape:', img.shape) 
-# d2lzh.plt.imshow(img.asnumpy())
+# # 5. get image, show output
+# img = image.imread('../voc-2012/VOCdevkit/VOC2012/JPEGImages/2007_000027.jpg')
+# X = img.astype('float32').transpose((2, 0, 1)).expand_dims(axis=0) / 255
+# Y = net(X)
+# out_img_index = nd.argmax(Y[0], axis=0).astype('int32')
+# out_img = nd.array(d2lzh.VOC_COLORMAP)[out_img_index].astype('uint8')
 
-print('output image shape:', out_img.shape)
+# # d2lzh.set_figsize()
+# print('input image shape:', img.shape) 
+# # d2lzh.plt.imshow(img.asnumpy())
 
-print([img, out_img][0])
-# d2lzh.plt.imshow(out_img.asnumpy())
-d2lzh.show_images([img, out_img, img, out_img], 2, 2)
-d2lzh.plt.show()
+# print('output image shape:', out_img.shape)
+
+# print([img, out_img][0])
+# # d2lzh.plt.imshow(out_img.asnumpy())
+# d2lzh.show_images([img, out_img, img, out_img], 2, 2)
+# d2lzh.plt.show()
