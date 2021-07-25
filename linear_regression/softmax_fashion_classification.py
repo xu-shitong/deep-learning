@@ -73,6 +73,6 @@ print(f"result parameter: W: {W}, b: {b}")
 # get test loss
 acc_loss = 0
 for X, y in test_iter:
-  acc_loss += cross_entropy(forward(X, W, b), y)
+  acc_loss += cross_entropy(forward(X, W, b), y).sum()
 
-print(f"average loss on test data: {acc_loss.mean()}")
+print(f"average loss on test data: {acc_loss}")
