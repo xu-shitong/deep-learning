@@ -274,7 +274,9 @@
 \noindent \texttt{from mxnet.gluon import data as gdata}\\
 \texttt{mnist\_train = gdata.vision.FashionMNIST(train=True)} 
 
-  得到数据集, \texttt{train=True}为训练数据集，否则为测试训练集\\
+  得到数据集, \texttt{train=True}为训练数据集，否则为测试训练集
+  
+  数据集传入\texttt{gdata.DataLoader()}得到批量化的训练参数\\
 \texttt{features, label = mnist\_train[i:j]}
   
   得到一个或多个sample

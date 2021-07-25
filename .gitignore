@@ -13,3 +13,4 @@ mxnet_note/mxnet_note.aux
 mxnet_note/mxnet_note.log
 mxnet_note/mxnet_note.synctex.gz
 deep-learning_GPU.pem
+*/__pycache__
