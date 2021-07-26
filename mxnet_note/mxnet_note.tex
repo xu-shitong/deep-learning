@@ -380,18 +380,18 @@
 
   COLORMAP2LABEL 为python 1维数组，记录$256^3$种颜色对应的标签index\\
 \texttt{conv\_trans = nn.Conv2DTranspose(通道数, kernel\_size=4, padding=1, strides=2)}\\
-\texttt{conv]\_trans.initialize(init.Constant(bilinear\_kernel(CHANNEL\_NUM\_IN, CHANNEL\_NUM\_OUT=conv\_trans通道数, kernel\_size=4)))}\\
+\texttt{conv\_trans.initialize(init.Constant(bilinear\_kernel(CHANNEL\_NUM\_IN, CHANNEL\_NUM\_OUT=conv\_trans通道数, kernel\_size=4)))}\\
 
   初始化转置卷积层
 % ----------------------------------------------------------------------
 % |              convolutional neural network卷积神经网络                |
 % ----------------------------------------------------------------------
 \section{convolutional network卷积神经网络}
-\noindent \texttt{CONV\_2D = nn.Conv2D(CHANNEL\_NUM, KERNEL\_SIZE, PADDING, STRIDE)}
+\noindent \texttt{CONV\_2D = nn.Conv2D(CHANNEL\_NUM, KERNEL\_SIZE, PADDING, STRIDE, ACTIVATION)}
 
   - 定义一卷积层
 
-  - CHANNEL\_NUM = 整数，定义输出通道数
+  - CHANNEL\_NUM = \texttt{channels = 整数}，定义输出通道数
 
   - KERNEL\_SIZE = \texttt{kernel\_size = (., .)} 定义kernel的shape
 
@@ -401,18 +401,21 @@
 
   \quad \texttt{padding=N} 等同\texttt{padding=(N, N)}
   
-  - STRIDE = \texttt{stride=(n, m)} 横向移动步幅为n，纵向步幅为m
+  - STRIDE = \texttt{strides=(n, m)} 横向移动步幅为n，纵向步幅为m
   
-  \quad \texttt{stride=N} 等同\texttt{stride=(N, N)}\\
+  \quad \texttt{strides=N} 等同\texttt{strides=(N, N)}
+  
+  - ACTIVATION = \texttt{activation='relu'} 使用\texttt{relu}激活函数，\texttt{='sigmoid'}使用\texttt{sigmoid}激活函数\\
 \texttt{CONV\_2D.weight.data()[:] = ... * CONV\_2D.weight.grad()}
 
   优化函数写法。若输出矩阵计算由对每一元素赋值得到，无法使用自动求斜率
   
   使用的输入输出矩阵shape：\texttt{(批量大小，通道数，行数，列数)}\\
-\texttt{nn.MaxPool2D(SHAPE, PADDING, STRIDE)}
+\texttt{nn.MaxPool2D(SHAPE, PADDING*, STRIDE*)}
 
-  SHAPE = \texttt{(n, m)} 或 \texttt{N} 定义池化窗口shape
+  SHAPE = \texttt{pool\_size=(n, m)} 或 \texttt{=N}，定义池化窗口shape
 
-  PADDING, STRIDE同kernel
+  PADDING, STRIDE同kernel\\
+\texttt{nn.AvgPool2D(SHAPE, PADDING*, STRIDE*)}  
 
 \end{document}
