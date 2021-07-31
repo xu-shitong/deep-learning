@@ -25,6 +25,7 @@
 \textbf{hyperparameter超参数}：人为设定的参数。如样本个数（批量大小batch size）$|B|$，学习率$\eta $。少数情况下通过学习得到\\
 \textbf{W 一层layer的权重矩阵}：行数 = 前层节点数，列数 = 当前层节点数\\
 \textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接\\
+\textbf{sigmoid函数}：$\sigma(x) = \frac{1}{1+e^{-x}}$\\
 \textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正\ 2. 值总和为1\\
 \textbf{cross entropy交叉熵}
 
@@ -55,12 +56,12 @@
 
   \quad 2.对$P'$中每一$p'_i$取sigmoid值，对所有$m_i = 1$的$p_i$求平均值
 
-  $f(P, L, M) = \frac{P * (-1)^L * M}{sum(M)}$
+  整体计算为：$f(P, L, M) = \frac{P * (-1)^L * M}{sum(M)}$
 % --------------------------------------------------------------------------
 % |                       linear regression线性回归                         |
 % --------------------------------------------------------------------------
 \section{linear regression线性回归}
-\noindent \textbf{平方代价函数}：$J(\theta ) = \frac{1}{n} \sum_{i = 1}^{n} J^{(i)}(\theta ) = \frac{1}{n} \sum_{i = 1}^{n} (\hat{y}^{(i)} - y^{(i)})^2  $，为所有样本误差的平均值\\
+\noindent \textbf{平方代价函数}：$J(\theta ) = \frac{1}{|B|} \sum_{i = 1}^{|B|} J^{(i)}(\theta ) = \frac{1}{2|B|} \sum_{i = 1}^{|B|} (\hat{y}^{(i)} - y^{(i)})^2  $，为所有样本误差的平均值\\
 \textbf{迭代}：$\theta_i = \theta_i - \frac{\eta}{|B|}\sum_{j\in B} \frac{d J^{(j)}(\theta)}{d \theta_i}$，即对所有sample训练一次，得到label差值，对每一参数减\ 斜率*学习率\ 的平均值
   
   当使用平方代价函数：
