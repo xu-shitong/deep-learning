@@ -68,8 +68,8 @@ class TinySSD(nn.Block):
       X, anchors[i], cls_preds[i], bbox_preds[i] = blk_forward(
         X, getattr(self, 'blk_%d' % i), sizes[i], ratios[i],
         getattr(self, 'cls_%d' % i), getattr(self, 'bbox_%d' % i)) # reshape函数中的0表示保持批量大小不变
-      print(cls_preds[i].shape)
-      print(bbox_preds[i].shape)
+      # print(cls_preds[i].shape)
+      # print(bbox_preds[i].shape)
     return (nd.concat(*anchors, dim=1), 
             concat_preds(cls_preds).reshape((0, -1, self.num_classes + 1)), 
             concat_preds(bbox_preds)
@@ -90,11 +90,13 @@ class TinySSD(nn.Block):
 
 net = TinySSD(num_classes=1)
 net.initialize()
-X = nd.zeros((32, 3, 256, 256))
+X = nd.ones((32, 3, 256, 256))
 anchors, cls_preds, bbox_preds = net(X)
 
 
-print('output anchors:', anchors.shape) 
-print('output class preds:', cls_preds.shape) 
-print('output bbox preds:', bbox_preds.shape)
-print(cls_preds[0, 10, :])
+# print('output anchors:', anchors.shape) 
+# print('output class preds:', cls_preds.shape) 
+# print('output bbox preds:', bbox_preds.shape)
+# print(cls_preds[0, 10, :])
+print(f"cls_preds = {cls_preds}")
+print(f"bbox_pred = {bbox_preds}")
