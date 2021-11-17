@@ -26,18 +26,32 @@
 \textbf{W 一层layer的权重矩阵}：行数 = 前层节点数，列数 = 当前层节点数\\
 \textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接\\
 \textbf{sigmoid函数}：$\sigma(x) = \frac{1}{1+e^{-x}}$\\
+\textbf{tanh函数}：$tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$\\
 \textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正\ 2. 值总和为1\\
-\textbf{cross entropy交叉熵}
+\textbf{catagorical cross entropy交叉熵}
 
   定义：分部p\ 和\ 分部q\ 间的\ cross entropy $H(p, q) = -E_p(\log (q))$。为\ expected value of $log (q)$ with respect to distribution p
 
-  公式：$H(y^{(i)}, \hat{y}^{(i)}) = -\sum_{j\in B}y^{(i)}log(\hat{y}^{(i)})$
+  公式：对一样本的输出$\hat{y}^{(i)}$, $H(y^{(i)}, \hat{y}^{(i)}) = -\frac{1}{|B|}\sum_{j\in B}y^{(i)}_jlog(\hat{y}^{(i)}_j)$
 
-  \quad \textbf{$y^{(i)}, \hat{y}^{(i)}$为类别的向量表示}
+  \quad 对一批量的输出使用cross entropy：对每一样本i的$H(y^{(i)}, \hat{y}^{(i)})$求和
 
   使用：联系两个值概率分部间的差异，即可将数值输出$\hat{y}$和分类结果$y$直接做对比
 
+  \quad \textbf{适用于multi-class classification，仅有唯一类别作为输出}
+
   \quad 仍可和softmax同时使用，softmax将可能性先转换为正数并和为1，随后使用cross entropy\\
+\textbf{binary cross entropy}
+
+  公式：$H(y^{(i)}, \hat{y}^{(i)}) = -\frac{1}{|B|}\sum_{j \in B} y^{(i)}_jlog(\hat{y}^{(i)}_j) + (1 - y^{(i)})log(1 - \hat{y}^{(i)}_j)$
+
+  \quad $\hat{y}^{(i)}, y^{(i)}$为单一标量
+  
+  使用：
+  
+  \quad \textbf{使用于单个输出的logistic regression，或multi-label regression}
+  
+  \quad multi-label regression代价值为每一label预测值的binary cross entropy求和\\
 \textbf{指数加权移动平均}
 
   $y_t = \gamma y_{t-1}+(1-\gamma)x_t$\\
@@ -59,6 +73,95 @@
   \quad 2.对$P'$中每一$p'_i$取sigmoid值，对所有$m_i = 1$的$p_i$求平均值
 
   整体计算为：$f(P, L, M) = \frac{P * (-1)^L * M}{sum(M)}$
+% --------------------------------------------------------------------------
+% |                           perceptron 分类算法                           |
+% --------------------------------------------------------------------------
+\section{perceptron 分类算法}
+\noindent \textbf{前向传播}
+
+  $\hat{y} = h(W^Tx + b)$
+  
+  激活函数h(x)
+
+  \quad 当$x > 0$时$h(x) = 1$
+
+  \quad 当$x \leq 0$时$h(x) = 0$\\
+\textbf{迭代}
+
+  $\theta_i = \theta_i + \alpha(y - h(x))x_i$
+  
+  \quad $\alpha$为学习率
+
+% --------------------------------------------------------------------------
+% |                            反向传播公式推导                              |
+% --------------------------------------------------------------------------
+\section{反向传播公式推导}
+\noindent \textbf{向量求导定义}
+
+  标量对向量求导：$\frac{ds}{d\textbf{v}} = \begin{bmatrix}
+    \frac{ds}{dv_0} & \frac{ds}{dv_1} & ... & \frac{ds}{dv_n}
+    \end{bmatrix}$
+
+  向量对向量求导：$\frac{d\textbf{u}}{d\textbf{v}} = \begin{bmatrix}
+    \frac{du_0}{dv_0} & ... & \frac{du_0}{dv_n} \\
+    ... & ... & ... \\
+    \frac{du_m}{dv_0} & ... & \frac{du_m}{dv_n}
+    \end{bmatrix}$
+  
+  对$z = Wx$有：
+  
+  \quad $\frac{z}{x} = W$
+  
+  \quad $\frac{dL}{dW} = \frac{dL}{dz}x$
+
+  对$z = xW$有：
+  
+  \quad $\frac{dz}{dx} = W^T$
+
+  \quad $\frac{dL}{dW} = x^T\frac{dL}{dz}$\\
+\textbf{对一层前向传播$g(Z)$, $Z = XW + \vec{b}$}
+
+  X为前一层输入，即前一层g(X)矩阵
+  
+  g此处为广播操作，对矩阵Z中每一元素求activation 值
+  
+  +此处为广播操作，对每行XW加偏差\\
+\textbf{求权重斜率}
+  
+  单一权重值求导：$\frac{dL}{dw_{ij}} = \sum_k \frac{dL}{dZ_{kj}} X_{ki}$
+
+  对权重矩阵求导：$\frac{dJ}{dW} = X^T\frac{dL}{Z}$\\
+\textbf{对前一层输出X求导}
+
+  $\frac{dL}{dX_{ij}} = \sum_k W_{jk}\frac{dL}{dZ_{ik}}$
+
+  $\frac{dL}{dX} = \frac{dL}{dZ}W^T$\\
+\textbf{对偏差求导}
+
+  $\frac{dL}{db_i} = \sum_k \frac{dL}{dZ_{ki}}$
+
+  $\frac{dL}{d\vec{b}} = \vec{1}^T\frac{dL}{dZ}$\\
+\textbf{激活函数求导}
+
+  反向传播：$\frac{dL}{dx} = \frac{dL}{dg(x)} \cdot g'(x)$
+  
+  \quad $g', \cdot$ 为按元素操作
+
+  sigmoid $g(z) = \frac{1}{1 + e^{-z}}$ 求导： $g'(z) = g(z)(1 - g(z))$
+
+  tanh $g(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$ 求导： $g'(z) = 1 - g(z)^2$
+
+  softmax $\hat{y}_i = softmax(z_i)$ $J = -\frac{1}{N}\sum_{i=1}^{N}\sum_{c=1}^{C}y_{ic}log(\hat{y}_{ic})$，
+  
+  \quad 求导： $\frac{dL}{dz} = \frac{1}{N}(\hat{y} - y)$\\
+\textbf{验证gradient计算}
+
+  1.得到斜率$\frac{dL}{dW}$
+
+  2.微调$W + \epsilon$，计算$L(W)$，$\frac{dL}{dW} \approx \frac{L(W + \epsilon) - L(W - \epsilon)}{2\epsilon}$
+
+  3.比较两$\frac{dL}{dW}$值是否相近
+
 % --------------------------------------------------------------------------
 % |                       linear regression线性回归                         |
 % --------------------------------------------------------------------------
@@ -84,13 +187,27 @@
 \textbf{softmax线性回归}：单层神经网络，使用softmax函数得到分类，使用cross entropy计算代价\\
 \textbf{过拟合问题}
 
-  \textbf{1.权重衰减}：在代价函数中惩罚高权重的值，尽可能使所有权重值减小
+  \textbf{1.权重衰减regularisation}：在代价函数中惩罚高权重的值，尽可能使所有权重值减小
 
-  \quad 新代价函数 = $J(\theta) + \frac{\lambda}{2}\sum_{w\in W}w^2$，即 $J(\theta) + \frac{\lambda}{2} * $ 所有权重的平方和。$\lambda$为超参数，决定权重衰减的程度
+  \quad \textbf{每一权重的正则化值都会影响其余所有权重的斜率}，由于正则化项为标量加入代价函数
 
-  \textbf{2.丢弃法}
+  \quad L2 正则化代价函数 = $J(\theta) + \frac{\lambda}{2}\sum_{w\in W}w^2$，即 $J(\theta) + \frac{\lambda}{2} * $ 所有权重的平方和。$\lambda$为超参数，决定权重衰减的程度
+
+  \quad \quad 求导 = $\frac{dL}{dw} + \lambda w$
+  
+  \quad L1 正则化代价函数 = $J(\theta) + \lambda \sum_{w\in W} |w|$，即 $J(\theta) + \frac{\lambda}{2} * $ 所有权重绝对值和。
+
+  \quad \quad 求导 = $\frac{dL}{dw} + \lambda sign(w)$
+
+  \textbf{2.丢弃法dropout}
 
   \quad 每一权重（不包括const）有p的几率 $\theta' = 0$，有1-p的几率 $\theta' = \frac{\theta}{1-p}$
+
+  \quad \quad 常用p = 0.5
+
+  \quad \quad \textbf{仅将输出值部分设为0，不删除原权重}
+
+  \quad \quad \textbf{反向传播时被隐藏的神经元向上一层传斜率为0}
 
   \quad 为了得到确切的值，在测试模型时较少使用\\
 \textbf{初始化参数}
@@ -100,9 +217,13 @@
   \textbf{2.Xavier随机初始化}：对一全连接层，输入个数a，输出个数b，则所有参数$\sim U(-\sqrt{\frac{6}{a+b}}, \sqrt{\frac{6}{a+b}})$\\
 \textbf{预处理数据集}
 
-  \textbf{1.特征标准化}：$x' = \frac{x - \mu}{\sigma}$，即统计中z值
+  \textbf{1.特征标准化 standardization/z-normalization}：$x' = \frac{x - \mu}{\sigma}$，即统计中z值
 
-  \textbf{2.离散值转换成指示特征}：对于一个可取值为A, B, C的离散输入值，转换成3个数值输入。即如果原输入为A，转换后3个数值输入为1，0，0。原离散值为B则转换后为0，1，0\\
+  \textbf{2.离散值转换成指示特征}：对于一个可取值为A, B, C的离散输入值，转换成3个数值输入。即如果原输入为A，转换后3个数值输入为1，0，0。原离散值为B则转换后为0，1，0
+  
+  \textbf{3.Min-max normalisation}：将每一特征值拉伸为[a, b]，取一特征的最值$X_{min}, X_{max}$，则拉伸后每一特征值$X' = a + \frac{(X - X_{min})(b - a)}{X_{max} - X_{min}}$
+  
+  \quad 存储a, b, $X_{min}$, $X_{max}$值可将数据逆操作 得到原数据集\\
 \textbf{结构}
   
   - 将训练集分组，每组batch\_size个sample。
@@ -581,12 +702,16 @@
 
   每次迭代随机选择一个\textbf{样本}，得到权重针对此样本的斜率进行梯度下降\ 而不是求参数针对所有样本的代价函数斜率。开销从O(n)变为O(1)
 
-  \quad 即 任取的样本j，SGD迭代为$\theta_i = \theta_i - \eta \frac{d J^{(j)}(\theta)}{d \theta_i}$\\
+  \quad 即 任取的样本j，SGD迭代为$\theta_i = \theta_i - \eta \frac{d J^{(j)}(\theta)}{d \theta_i}$
+  
+  \quad 训练时noisy\\
 \textbf{batch gradient descent 小批量随机梯度下降}：采样方法
 
   每次迭代随机选择一组样本 $B$，计算参数关于$B$的代价函数斜率
 
-  重复采样：允许$B$中重复出现同一样本。反之不重复采样
+  \quad 分组目的为减少noisy，并避免需要迭代过整个训练集才能计算斜率
+
+  重复采样：允许$B$中重复出现同一样本。反之不重复采样，
 
   随迭代次数增加，学习率可减小，使学习率和斜率的乘积方差减小\\\\
 \textbf{动量法}：迭代方法
@@ -606,6 +731,11 @@
   \quad $v_t = \gamma v_{t-1} + \eta_t g_t$
 
   \quad $x_t = x_{t-1} - v_t$\\
+\textbf{adaptive learning rate}
+
+  对每一参数使用不同learning rate，当参数更新较慢时增加学习率，反之减少
+  
+  以下迭代方法均为adaptive learning rate算法\\
 \textbf{AdaGrad算法}：迭代方法
 
   根据参数斜率调整学习率
