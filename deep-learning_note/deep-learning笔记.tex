@@ -582,42 +582,68 @@
 
   模型：
 
+  \quad 输入$X_t$，输出$O$：时间步数\ 个\ (批量大小，词典大小)矩阵
+
   \quad 1.隐藏层$H_t = \phi(X_tW_{xh} + H_{t-1}W_{hh} + b_h)$
 
   \quad \quad $X_t$为上一时间步的词
 
-  \quad \quad $H_{t-1}$项为隐藏层前一次输出，第一个时间步使用全零$H_{t-1}$矩阵
+  \quad \quad $H_{t-1}$项为隐藏层前一次输出，称隐藏状态，第一个时间步使用全零$H_{t-1}$矩阵
+
+  \quad \quad 简化计算：$X_tW_{xh} + H_{t-1}W_{hh} = [X_t, H_{t-1}][W_{xh}, W_{hh}]^T$
+
+  \quad \quad 激活函数$\phi$为tanh
 
   \quad 2.输出层$O = HW_{hq} + b_q$
   
   实现：
-  
-  \quad 输入：(批量大小, 时间步数) 每一元素为词的编号
-  
-  \quad \quad 输入转换为\ 时间步数 * (批量大小, 词典大小) 个矩阵，第$i$矩阵第$j$行对应\ 批量中第$j$样本\ 第$i$时间步的词的one\_hot向量
-  
-  \quad 激活函数使用$tanh$
-  
-  \quad 计算：
 
-  \quad \quad $H_t = \phi(X_tW_{xh} + H_{t-1}W_{hh} + b_h)$
+  \quad 训练时输入一段词序$[w_{0}, w_{l}]$，输出即为预测$[w'_{1}, w'_N]$的词
+  
+  \quad 批量输入：(批量大小, 时间步数$l$) 每一元素为单个词，即一批量的句子前缀
+  
+  \quad \quad 输入转换为\ 时间步数\ 个\ (批量大小, 词典大小)矩阵，第$i$矩阵第$j$行对应\ 批量中第$j$样本\ 第$i$时间步的词的one\_hot向量
+    
+  \quad 计算：预测$T$长度的词序
 
-  \quad \quad $O = HW_{hq} + b_q$
-  
-  \quad \quad 遍历前多个时间步的(批量大小, 词典大小)矩阵，每一时间步矩阵即$X_t$。
-  
-  \quad \quad 训练时输入一段时间步$[w_{t0}, w_{t1}]$，输出即为预测$[w_{t0+1}, w_{t1+1}]$的词
-  
-  \quad \quad \quad \textbf{1.输出的词在$[w_{t0+1}, w_{t1}]$时间步不一定和训练集一致}
+  \quad \quad 时间步$t$从1开始
 
-  \quad \quad \quad \textbf{2.输出为$(t1+1) - (t0+1)$个时间步的预测词，每个词使用one\_hot向量表示}
+  \quad \quad 1.$t = 0$的隐藏状态$H_0$设为全0向量
+
+  \quad \quad 2.$t \leq T$：使用(prefix在t位置的词，隐藏状态$H_{t-1}$)计算\ (t位置预测词，$H_t$)
+
+  \quad \quad \quad \textbf{输出词$[w'_{1}, w'_{T}]$不一定和输入$[w_1, w_T]$一致}，但在$[1, T]$时间段内使用输入词$w_{t-1}$，而非上一预测词$w'_{t-1}$\ 进行预测
   
-  \quad \quad 代价函数使用 $(t1+1) - (t0+1)$个时间步one\_hot表示\ 和\ 每一$[w_{t0+1}, w_{t1}]$时间内词的one\_hot表示\ 的交叉熵\\
+  \quad \quad 3.$t > T$：使用(上一预测词，$H_{t-1}$)预测
+
+  \quad \quad \quad 训练时标签长度和prefix长度相同，即到达t = T时预测停止
+  
+  \quad \quad 代价函数对每组\ 预测词和目标词的one\_hot\ 使用softmax交叉熵，求和\\
 \textbf{通过时间反向传播}
 
-  \textbf{有关时间步的损失函数}：$L = \frac{1}{T}\sum_{t = 1}^{T} l(o_t, y_t) $
+  \textbf{有关时间步的损失函数}：$L = \frac{1}{T}\sum_{t = 1}^{T} l(o_t, y_t) $ \textbf{$o_t$此处为单一批量的t时间步输出}
 
-  \textbf{** 反向传播公式 **}\\\\
+  \textbf{反向传播公式} 
+  
+  \quad 针对单一样本，假设隐藏层不使用激活函数
+
+  \quad \quad $h_t = W_{xh}x_t + W_{hh}h_{t-1} + b_h$
+
+  \quad \quad $o = W_{hq}h_t$
+  
+  \quad $\frac{d L}{d o_t} = \frac{1}{T}\frac{d l(o_t, y_t)}{d o_t}$
+  
+  \quad $\frac{d L}{d W_{qh}} = \sum_{t=1}^{T}\frac{d L}{d o_t}h_t^T$
+  
+  \quad $\frac{d L}{d h_T} = W_{qh}^T\frac{d L}{d o_T}$
+  
+  \quad 当t < T：$\frac{d L}{d h_t} = W_{hh}^T\frac{d L}{d h_{t+1}} + W_{qh}^T\frac{d L}{d o_t}$
+  
+  \quad \quad $ = \sum_{i=t}^{T}(W_{hh}^T)^{T - i}W_{qh}^T\frac{d L}{d o_{T - i + t}}$
+  
+  \quad $\frac{d L}{d W_{hx}} = \sum_{t=1}^{T}\frac{d L}{d h_t}x^T$
+  
+  \quad $\frac{d L}{d W_{hh}} = \sum_{t=1}^{T}\frac{d L}{d h_t}h_{t-1}^T$\\
 \textbf{GRU 门控循环单元}
 
   替代原计算隐藏状态方法，应对梯度衰减
@@ -630,9 +656,9 @@
 
   \quad 得到上一层影藏层结果$H_{t-1}$ 当前时间步输入$X_t$
 
-  \quad 隐藏层$R_t = \sigma(X_tW_{xr} + H_{t-1}W_{hr} + b_r)$
+  \quad 重置门$R_t = \sigma(X_tW_{xr} + H_{t-1}W_{hr} + b_r)$
   
-  \quad 更新层$Z_t = \sigma(X_tW_{xz} + H_{t-1}W_{hz} + b_z)$
+  \quad 更新门$Z_t = \sigma(X_tW_{xz} + H_{t-1}W_{hz} + b_z)$
 
   \quad \quad W 为权重参数\ b为偏差参数 $\sigma$为sigmoid函数
 
@@ -644,12 +670,32 @@
 
   \textbf{隐藏状态}
 
-  \quad $H_t = Z_t \odot H_{t-1} + (1-Z_t)\odot \tilde{H_t}$\\
-\textbf{LSTM长短期记忆 门控循环网络}
+  \quad $H_t = Z_t \odot H_{t-1} + (1-Z_t)\odot \tilde{H_t}$
+  
+  输出公式不变：$O_t = H_tW_{hq} + b_q$\\
+\textbf{LSTM长短期记忆} 门控循环网络
   \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
     \centering %图片居中
     \includegraphics[width=0.6\textwidth]{note_images/LSTM.png} %插入图片，[]中设置图片大小，{}中是图片文件名
   \end{figure}
+  
+  \textbf{input gate输入门 forget gate遗忘门 output gate输出门 候选记忆细胞}
+
+  \quad 输入门$I_t = \sigma(X_tW_{xi} + H_{t-1}W_{hi} + b_i)$
+
+  \quad 遗忘门$F_t = \sigma(X_tW_{xf} + H_{t-1}W_{hf} + b_f)$
+  
+  \quad 输出门$O_t = \sigma(X_tW_{xo} + H_{t-1}W_{ho} + b_o)$
+
+  \quad 候选记忆细胞$\tilde{C}_t = tanh(X_tW_{xc} + H_{t-1}W_{hc} + b_c) $
+
+  \textbf{记忆细胞}
+
+  \quad $C_t = F_t \odot C_{t-1} + I_t \odot \tilde{C}_t$
+
+  \textbf{隐藏状态}
+
+  \quad $H_t = O_t \odot tanh(C_t)$\\
 \textbf{深度循环神经网络}
 
   包含多个隐藏层的RNN
