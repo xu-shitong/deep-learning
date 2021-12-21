@@ -1189,14 +1189,16 @@
 
   \quad 当中心词一侧背景词个数$l<n$，填充$n-l$个无效词，随后由掩码舍弃不进入代价函数计算。
 
-  给定中心词$w_c$，有单个背景词$w_o$的概率$P(w_o | w_c) = \frac{exp(u_o^Tv_c)}{\sum_{i\in\mathcal{V} } exp(u_i^Tv_c)}$\\
+  给定中心词$w_c$，有单个背景词$w_o$的概率$P(w_o | w_c) = \frac{exp(u_o^Tv_c)}{\sum_{i\in\mathcal{V} } exp(u_i^Tv_c)}$
+  
+  \quad $ log(P(w_o | w_c)) = u_o^Tv_c - log(\sum_{i\in\mathcal{V} } exp(u_i^Tv_c))$\\
 \textbf{跳字模型}：
   
   基于一个\textbf{中心词}生成才其周围的多个\textbf{背景词}
 
   \textbf{似然函数}：代表一段词序发生的可能性
 
-  \quad 对中心词$w_c$，产生所有窗口内的背景词的概率为(假设背景词间$independent$)$P(c) = \prod_{c-n<j<c+n} P(w_j | w_c)$
+  \quad 对中心词$w_c$，产生所有窗口内的背景词的概率为(假设背景词间$independent$)$P(c) = \prod_{c-n<j<c+n, j \neq c} P(w_j | w_c)$
 
   \quad (假设每一中心词产生背景词的可能性independent) 产生整个词序$S$的可能性：
   
@@ -1205,8 +1207,8 @@
   \textbf{代价函数}：基于似然函数，高似然代表低代价函数值
 
   \quad $J = -log(P(S)) = -\sum_{c = 0}^{|S|-1} \sum_{j = c-n, j \neq c}^{c+n} log(P(w_j | w_c))$
-
-  \quad 求导： $\frac{d J}{d v_c} = -\sum_{c = 0}^{|S|-1} \sum_{j = c-n, j \neq c}^{c+n} \frac{d P(w_j | w_c)}{d v_c}$
+  
+  \quad 求导： $\frac{d J}{d v_c} = -\sum_{c = 0}^{|S|-1} \sum_{j = c-n, j \neq c}^{c+n} \frac{d log(P(w_j | w_c))}{d v_c}$
 
   \quad \quad 对于每一中心词$v_c$有$\frac{d P(w_j | w_c)}{d v_c} = u_o^T - \sum_{j\in\mathcal{V}}P(w_j | w_c)u_j$\\
 \textbf{连续词袋模型}
@@ -1242,24 +1244,60 @@
 
   \quad 定义：
 
-  \quad \quad 背景词$w_o$出现在$w_c$背景窗的概率为$P(D = 1|w_c, w_o) = \sigma(u_c^Tv_o)$
+  \quad \quad 背景词$w_o$出现在$w_c$背景窗的概率为$P(D = 1|w_c, w_o) = \sigma(u_o^Tv_c)$
 
   \quad \quad \quad $\sigma$为sigmoid激活函数，$D = 1$代表事件发生，$D = 0$代表未发生
 
-  \quad 更改$P(w_o | w_c)$定义：$P(w_o | w_c) = P(D = 1| w_c, w_o)\prod_{k=1, w_k \in P(w)}^{K}P(D = 0 | w_c, w_k)$
+  \quad 更改$P(w_o | w_c)$定义：$P(w_o | w_c) = P(D = 1| w_c, w_o)\prod_{k=1, w_k \sim P(w)}^{K}P(D = 0 | w_c, w_k)$
 
   \quad \quad 根据$P(w)$分部取$K$个反样本，称噪声词，反样本不能为背景词
 
-  \textbf{** 层序softmax **}\\
+  \quad \quad \textbf{加入反样本的原因：若最大化$P(D = 1|w_c, w_o) = \sigma(u_o^Tv_c)$，则所有词向量方向相同且长度极大}
+
+  \quad 代价函数：$-log(P(w_o | w_c)) = -log(\sigma(u_o^Tv_c)) - \sum_{k=1, w_k \sim P(w)}^{K}log(1-\sigma(u_k^Tv_c))$
+
+  \quad \quad $ = -log(\sigma(u_o^Tv_c)) - \sum_{k=1, w_k \sim P(w)}^{K}log(\sigma(-u_k^Tv_c))$
+  \textbf{层序softmax}
+  
+  \quad 对整个词典有二叉树，每一分支节点$i$有背景词向量$u_i$，每一叶节点对应一词
+
+  \quad 定义：
+
+  \quad \quad $L(w)$：$w$在二叉树中的深度，包括根节点和叶节点
+
+  \quad \quad $n(w, i)$：从根节点到$w$叶节点的路径上第j个节点，有背景词向量$u_{n(w, i)}$
+
+  \quad \quad \quad \textbf{w在此为背景词，非中心词}
+
+  \quad \quad \quad 一节点只有唯一背景词向量，当一节点出现在多个路径上时背景词向量被共享
+
+  \quad 更改$P(w_o | w_c) = \prod_{j=1}^{L(w_o) - 1} \sigma(isLeftChild(n(w_o, j+1))) \cdot u_{n(w_o, j)}^Tv_c)$
+
+  \quad \quad \begin{equation*}
+    isLeftChild(x) = \begin{cases}
+    1 &x < 0\\
+    -1 & otherwise
+    \end{cases}
+  \end{equation*}
+
+  \quad \quad 对固定中心词$w_c$，所有词的几率和为$\sum_{o \in \mathcal{V}} P(w_o | w_c) = 1$
+
+  \quad \quad \quad 证明：选择任意节点$k$使得其左右子节点$i, j$都为叶节点
+
+  \quad \quad \quad \quad $P(w_i | w_c) + P(w_j | w_c) = \prod ... \cdot (\sigma(x) + \sigma(-x))$
+
+  \quad \quad \quad \quad $ = \prod ... \cdot 1$
+
+  \quad \quad \quad \quad 即，任意仅有2页子节点的节点，子节点可能性和都为1。循环合并子节点，最终得到跟节点可能性为1\\
 \textbf{二次采样}
 
   作用：对于一个词$w_0$，和低频词同时出现的情况\ 比\ 和高频词同时出现\ 对模型训练更加有用
 
   实现：
   
-  \quad 数据集中每个词有$P(w_i) = max(1-\sqrt{\frac{t}{f(w_i)}}, 0)$几率被丢弃
+  \quad 取样的背景词中每个词有$P(w_i) = max(1-\sqrt{\frac{t}{f(w_i)}}, 0)$几率被丢弃
 
-  \quad \quad $f(w_i) = $ 出现$w_i$个数 / 总词数，即$w_i$出现频率
+  \quad \quad $f(w_i) = $ 出现$w_i$个数 / 总词数，即词$w_i$在整个数据集中出现频率
 
   \quad \quad $t$为超参数
 
