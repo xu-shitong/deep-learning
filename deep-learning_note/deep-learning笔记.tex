@@ -1,6 +1,7 @@
 \documentclass[UTF8]{ctexart}
 \usepackage{geometry}
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{lmodern}
 \usepackage{graphicx} %插入图片的宏包
 \usepackage{float} %设置图片浮动位置的宏包
@@ -759,7 +760,7 @@
 
   重复采样：允许$B$中重复出现同一样本。反之不重复采样，
 
-  随迭代次数增加，学习率可减小，使学习率和斜率的乘积方差减小\\\\
+  随迭代次数增加，学习率可减小，使学习率和斜率的乘积方差减小\\
 \textbf{动量法}：迭代方法
 
   解决固定一学习率值无法同时满足多个参数的学习率范围，导致某些参数发生学习太慢，某些参数不断越过最优解
@@ -953,7 +954,7 @@
 
   \quad \quad 重复1.2.步，直至没有锚框剩余
 
-  多尺度目标检测：仅适用部分像素点作为锚框的中心，减少锚框数量，减少计算\\\\
+  多尺度目标检测：仅适用部分像素点作为锚框的中心，减少锚框数量，减少计算\\
 \textbf{SSD 单发多框检测}：一种目标检测算法
 
   \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
@@ -1566,7 +1567,110 @@
 % |                              推荐算法                                   |
 % --------------------------------------------------------------------------
 \section{推荐算法}
-\noindent 
+\noindent \textbf{collaborative filter CF}
+
+  分类：
+  
+  \quad memory-based CF：如nearest neighbour-based CF (包括user-based CF, item-based CF)，
+  
+  \quad model-based CF：matrix factorization 
+  
+  \quad hybrid CF
+
+  \quad pointwise approach：从implicit feedback 得到推荐
+
+  \quad \quad 针对每一组(用户，产品)关系得到推荐
+
+  \quad pairwise approach：从implicit feedback 得到推荐
+
+  \quad \quad 对每一用户，比较任意2产品的推荐程度
+
+  定义：
+
+  \quad 用户集合$U$，产品集合$I$, 用户u评分过的产品$I_u^+$
+
+  \quad interaction matrix $R \in \mathbb{R}^{m \times n}$：对m个用户n个产品，创建$m \times n$矩阵，元素$(i, j)$为用户$i$对$j$产品的评分
+
+  \quad sparsity：1 - interaction matrix中非空项个数 / $(n \times m)$
+
+  \quad seq-aware mode：分离测试集方法，将时间戳最近的数据留作测试集
+
+  \quad 训练集$D = {(u, i, j) | \forall u \in U, i \in I_u^+, j \in I \setminus I_u^+}$
+
+
+  \textbf{matrix factorization model}
+
+  \quad 定义：
+
+  \quad \quad 参数使用梯度下降学习，如SGD或Adam
+
+  \quad \quad k：latent factor size。远小于m,n
+
+  \quad \quad \quad 代表每一产品将有k个特征，用户对某一k元素向量的特征感兴趣
+
+  \quad \quad $P \in \mathbb{R}^{m \times k}$：user latent matrix
+
+  \quad \quad \quad 第i行代表用户i对最感兴趣的产品特征
+
+  \quad \quad $Q \in \mathbb{R}^{n \times k}$：item latent matrix
+
+  \quad \quad \quad 第i行代表产品i的特征
+
+  \quad \quad $b_u$：用户u的bias。$b_i$：产品i的bias
+
+  \quad \quad $\hat{R}_{ui} = PQ^T_{ui} + b_u + b_i$
+
+  \quad 代价函数：$\sum_{(u, i)} ||R_{ui} - \hat{R_{ui}}||^2 + \lambda(||P||_F^2 + ||Q||_F^2 + b_u^2 + b_i^2)$
+
+  \quad \quad 即，对$\hat{R}$使用平方代价函数，对$P, Q, b_u, b_i$使用L2 正则 
+
+  \textbf{item based AutoRec}
+
+  \quad 得到一个产品$i$的评价向量$R_{*i} \in \mathbb{R}^m$，每一元素为一用户对此产品的评价。
+  
+  \quad 输出一向量$\hat{R_{*i}} \in \mathbb{R}^m$，每一元素$R_{ji}$对应此产品对用户$j$的吸引力。
+
+  \quad $\hat{R}_{*i} = f(W \cdot g(VR_{*i} + \mu) + b)$
+
+  \quad \quad f, g为激活函数。可取f为linear activation，g为sigmoid + 0.05 dropout层
+
+  \quad 代价函数：$\sum_{i=1}^{m}||R_{*i} - \hat{R_{*i}}||_O^2 + \lambda (||W||_F^2 + ||V||_F^2)$
+
+  \quad \quad 即对每一用户，计算对其偏好向量的预测，和实际的偏好向量求平方代价函数。
+
+  \quad \quad 此模型假设所有产品的数据使用同一转换得到实际用户对产品的需求。
+
+  \textbf{Bayesian Personalized Ranking Loss}：一种pairwise ranking代价函数
+
+  \quad 预测：对一用户$u$，在产品$i, j$中用户偏向产品$i$的可能性为：$p(u, i, j) = \sigma(\hat{y}_{ui} - \hat{y}_{uj})$。
+  
+  \quad \quad $\hat{y}$为前向计算得到的用户$u$对产品$i$的偏向程度
+
+  \quad 目标：最大化posterior probability$p(\theta | >_u) \propto p(>_u | \theta)p(\theta)$
+
+  \quad \quad $\theta$代表参数，$>_u$代表实际用户对产品的排名。
+
+  \quad \quad 则最大化posterior estimate$ln(p(\theta | >_u)) \propto ln(\prod_{(u, i, j) \in D} \sigma(\hat{y}_{ui} - \hat{y}_{uj})p(\theta))$
+
+  \quad \quad \quad $ = \sum_{(u, i, j) \in D} ln(\sigma(\hat{y}_{ui} - \hat{y}_{uj})) + ln(p(\theta))$
+
+  \textbf{Hinge Loss}：一种pairwise ranking代价函数
+
+  \quad $\sum_{(u, i, j) \in D} max(m - \hat{y}_{ui} + \hat{y}_{ij}, 0)$
+
+  \quad \quad $m$为超参数
+
+  \quad \quad 即：需要前向计算结果对两产品预测差值至少达到$m$，否则增加代价值
+
+  \textbf{NeuMF}：一种neural CF
+
+  \quad 
+
+
+
+
+  
+  
 
 
 % --------------------------------------------------------------------------
