@@ -1640,7 +1640,7 @@
 
   \quad \quad 此模型假设所有产品的数据使用同一转换得到实际用户对产品的需求。
 
-  \textbf{Bayesian Personalized Ranking Loss}：一种pairwise ranking代价函数
+  \textbf{Bayesian Personalized Ranking Loss BPRLoss}：一种pairwise ranking代价函数
 
   \quad 预测：对一用户$u$，在产品$i, j$中用户偏向产品$i$的可能性为：$p(u, i, j) = \sigma(\hat{y}_{ui} - \hat{y}_{uj})$。
   
@@ -1664,11 +1664,39 @@
 
   \textbf{NeuMF}：一种neural CF
 
-  \quad 
+  \quad GMF部分：
 
+  \quad \quad 针对user，item latent matrix $P \in \mathbb{R}^{m \times k}$，$Q \in \mathbb{R}^{n \times k}$
 
+  \quad \quad $\hat{y}_{ui}^{MLP} = P_u \odot V_i$。即对$P, Q$的u行和i行按元素相乘
+  
+  \quad \quad 反向传播更新$P, Q$
 
+  \quad MLP部分：
 
+  \quad \quad 有$U \in \mathbb{R}^{m \times k}$，$V \in \mathbb{R}^{n \times k}$
+
+  \quad \quad 连接$U_u$和$V_i$行，使用全连接神经网络，输出$\hat{y}_{ui}^{MLP}$
+
+  \quad \quad 反向传播更新$U$，$V$，所有神经网络层参数
+
+  \quad 前向传播
+
+  \quad \quad 连接$[\hat{y}_{ui}^{GMF}, \hat{y}_{ui}^{MLP}]$。
+  
+  \quad \quad 使用单一全连接层，输出标量结果$\hat{y}_{ui} = f(h^T[\hat{y}_{ui}^{GMF}, \hat{y}_{ui}^{MLP}])$
+
+  \quad 代价函数使用BPRLoss
+
+  \quad ** 分析结果 **：
+
+  \quad \quad hit rate at cut off $l$：$Hit @ l = \frac{1}{m}\sum_{u \in U}(rank_{} \leq l)$
+
+  \quad \quad \quad 取用户$u$倾向的产品，求其中在推荐列表中排名前$l$名的个数。对所有用户重复操作，求个数和。
+
+  \quad \quad AUC：ROC曲线下方的面积
+
+  \quad \quad \quad $AUC = \frac{1}{m}\sum_{u \in U}\frac{1}{|I \setminus |}$
   
   
 
