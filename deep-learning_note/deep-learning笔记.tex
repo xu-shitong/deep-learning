@@ -33,7 +33,9 @@
 
   定义：分部p\ 和\ 分部q\ 间的\ cross entropy $H(p, q) = -E_p(\log (q))$。为\ expected value of $log (q)$ with respect to distribution p
 
-  公式：对一样本的输出$\hat{y}^{(i)}$, $H(y^{(i)}, \hat{y}^{(i)}) = -\frac{1}{|B|}\sum_{j\in B}y^{(i)}_jlog(\hat{y}^{(i)}_j)$
+  公式：对一样本的输出$\hat{y}^{(i)}$, $H(y^{(i)}, \hat{y}^{(i)}) = -\frac{1}{n}\sum_{j < n}y^{(i)}_jlog(\hat{y}^{(i)}_j)$
+
+  \quad n为输出标签数
 
   \quad 对一批量的输出使用cross entropy：对每一样本i的$H(y^{(i)}, \hat{y}^{(i)})$求和
 
@@ -41,16 +43,20 @@
 
   \quad \textbf{适用于multi-class classification，仅有唯一类别作为输出}
 
+  \quad \quad 原因：catagorical cross entropy假设\ 其余类别输出\ 随\ 期望类别输出升高\ 而降低，则忽略其余类别的输出是否为0
+
   \quad 仍可和softmax同时使用，softmax将可能性先转换为正数并和为1，随后使用cross entropy\\
 \textbf{binary cross entropy}
 
-  公式：$H(y^{(i)}, \hat{y}^{(i)}) = -\frac{1}{|B|}\sum_{j \in B} y^{(i)}_jlog(\hat{y}^{(i)}_j) + (1 - y^{(i)})log(1 - \hat{y}^{(i)}_j)$
+  公式：$H(y, \hat{y}) = -y \space log(\hat{y}) + (1 - y)log(1 - \hat{y})$
 
-  \quad $\hat{y}^{(i)}, y^{(i)}$为单一标量
+  \quad $\hat{y}, y$为单一标量
   
   使用：
   
   \quad \textbf{使用于单个输出的logistic regression，或multi-label regression}
+
+  \quad \quad multi label时将每一label分别进行binary cross entropy后求和
   
   \quad multi-label regression代价值为每一label预测值的binary cross entropy求和\\
 \textbf{指数加权移动平均}
@@ -73,8 +79,20 @@
 
   \quad 2.对$P'$中每一$p'_i$取sigmoid值，对所有$m_i = 1$的$p'_i$求平均值
 
-  整体计算为：$f(P, L, M) = \frac{\sigma(P) \odot (-1)^L \odot M}{sum(M)}$
-% --------------------------------------------------------------------------
+  整体计算为：$f(P, L, M) = \frac{\sigma(P) \odot (-1)^L \odot M}{sum(M)}$\\
+\textbf{Laplace smoothing}
+
+  令n(x)为x的出现个数，m为词的个数，n为所有词出现次数总和
+  
+  \quad 目标：解决在特殊词组$[x, x']$出现次数过小时$n(x, x')$较小。导致原公式$P(x' | x) = \frac{n(x, x')}{n(x)}$值过小
+    
+  $P(x) = \frac{n(x) + \epsilon_1 / m}{n + \epsilon_1}$
+
+  $P(x' | x) = \frac{n(x, x') + \epsilon_2 P(x')}{n(x) + \epsilon_2}$
+
+  $P(x'' | x, x') = \frac{n(x, x', x'') + \epsilon_3 P(x' | x)}{n(x, x') + \epsilon_3}$
+
+  % --------------------------------------------------------------------------
 % |                           perceptron 分类算法                           |
 % --------------------------------------------------------------------------
 \section{perceptron 分类算法}
@@ -544,44 +562,57 @@
 % --------------------------------------------------------------------------
 \section{RNN循环神经网络}
 
-\noindent 记录数据状态，根据以往状态和当前输入决定输出\\
+\noindent 记录数据状态，根据以往状态和当前输入决定输出
+
+  \textbf{仅仅使用前n个词进行预测会将误差叠加，导致产生的输出最终趋向一固定值}\\
 \textbf{n阶马尔科夫链}：一个词的出现仅和前n个词有关\\
 \textbf{语言模型}：词序($w_1$, $w_2$, ..., $w_T$)的出现可能性为
 
-  $P(w_1, w_2,...,w_T)\approx \prod_{t=1}^{T} P(w_t|w_{t-(n-1)},...,w_{t-1})$
+  $P(w_1, w_2,...,w_T) = \prod_{t=1}^{T} P(w_t|w_{t-(n-1)},...,w_{t-1})$
 
   称n元语法，每一$w_t$为一时间步中出现的词\\
 \textbf{处理语言模型}：将每一文字转化为索引，使用索引做训练参数集\\
 \textbf{one\_hot表示}：索引为$i$的词对应one\_hot向量$[v_0 = 0, v_1 = 0, ..., v_i = 1, v_{i+1} = 0, ...]$\\
 \textbf{采样方式}：
 
-  $BATCH\_SIZE$ 每次采集的样本数
+  $B$ batch size
   
-  $NUM\_STEPS$ 每个样本包含的时间步数，
+  $T$ 每个样本包含的时间步数
+
+  $S$ 总时间步数
 
   \textbf{1 随机采样}：
 
-  \quad [1 2 3 4] [5 6 7 8] [9 10 11 12] [13 14 15 16]
+  \quad 在$[0, T)$范围内选择一起始位置$s$，每$T$长度分为一样本。共得到$\lfloor \frac{S - s}{T} \rfloor$样本
 
-  \quad 将所有样本分为头尾相连的组，每组有相等可能性被取值，每次随机取BATCH\_NUM组
+  \quad 随机选择$B$个样本作为一批量数据
 
-  \quad 训练来自不同批量的样本时不能将前一次隐藏层结果纳入计算
+  \quad 训练不同样本时不能将前一次隐藏层结果纳入计算
   
   \textbf{2 相邻取样}：
 
-  \quad [1 2 3 4    ] [5 6 7 8    ] [9 10 11 12 ] [13 14 15 16]
+  \quad 同随机采样得到$\lfloor \frac{S - s}{T} \rfloor$样本
 
-  \quad [17 18 19 20] [21 22 23 24] [25 26 27 28] [29 30 31 32]
+  \quad 选择批量中样本时，不同批量的同一位置样本连续。即第2批量0位置的样本为第1批量0位置样本的下一样本
 
-  \quad 将样本填入BATCH\_NUM行矩阵，再分为(BATCH\_NUM, NUM\_STEPS)的小矩阵，每次每个小矩阵有等可能性被选择
-  
   \quad 仅需在训练一开始初始化隐藏层结果，而非在每一批量开始初始化\\
 \textbf{裁剪梯度}
 
-  将所有参数拼接成向量$g$，进行裁剪：$g' = min(\frac{\theta}{||g||}, 1)g$\\
-\textbf{困惑度}
+  将所有参数斜率拼接成向量$g$，进行裁剪：$g' = min(\frac{\theta}{||g||}, 1)g$
+  
+  \quad 即所有斜率一次迭代中最多更改$\theta$\\
+\textbf{困惑度 perplexity}
 
-  = exp(交叉熵损失函数值)\\
+  T时间步困惑度$ = exp(-\frac{1}{T}\sum_{i \in T} log(P(n_i | n_1, ..., n_{i-1})))$
+
+  \quad $n_i$为期望的输出词，$P(n_i | n_1, ..., n_{i-1})$即softmax后期望输出词位置的$\hat{y}$
+
+  \quad 即对每一样本，T时长里每一次预测的Softmax Caragorical交叉熵损失值求和，取exp
+  
+  求多迭代总困惑度，交叉熵按时长T加权求和后取exp值\\
+\textbf{强制学习 teaching forcing}：对自然语言人工智能通用
+
+  当预测第$i$时间步$y_i$时使$y_{i-1}$为样本实际上一label，而不是上一次预测的计算结果$\hat{y}_{i-1}$\\
 \textbf{RNN实现}
 
   模型：
@@ -617,12 +648,16 @@
   \quad \quad 2.$t \leq T$：使用(prefix在t位置的词，隐藏状态$H_{t-1}$)计算\ (t位置预测词，$H_t$)
 
   \quad \quad \quad \textbf{输出词$[w'_{1}, w'_{T}]$不一定和输入$[w_1, w_T]$一致}，但在$[1, T]$时间段内使用输入词$w_{t-1}$，而非上一预测词$w'_{t-1}$\ 进行预测
+
+  \quad \quad \quad 即forced learning。或称warm-up，过程中计算了隐藏状态
   
   \quad \quad 3.$t > T$：使用(上一预测词，$H_{t-1}$)预测
 
   \quad \quad \quad 训练时标签长度和prefix长度相同，即到达t = T时预测停止
   
-  \quad \quad 代价函数对每组\ 预测词和目标词的one\_hot\ 使用softmax交叉熵，求和\\
+  \quad \quad 代价函数对每组\ 预测词和目标词的one\_hot\ 使用softmax交叉熵，求和/求平均
+  
+  \quad \quad \quad 反向传播仍使用此批量T时长的总代价值，不使用困惑度反向传播\\
 \textbf{通过时间反向传播}
 
   \textbf{有关时间步的损失函数}：$L = \frac{1}{T}\sum_{t = 1}^{T} l(o_t, y_t) $ \textbf{$o_t$此处为单一批量的t时间步输出}
@@ -1560,11 +1595,7 @@
   
   \quad \quad 更新门$z_{t'} = \sigma(W_{yz}y_{t'-1} + W_{sz}s_{t'-1} + W_{cz}c_{t'} + b_z)$
 
-  \quad \quad 候选隐藏状态$\tilde{s}_{t'} = tanh(W_{ys}y_{t'-1} + W_{ss}(s_{t'-1} \odot r_{t'}) + W_{cs}c_{t'} + b_s)$\\
-\textbf{强制学习 teaching forcing}：对自然语言人工智能通用
-
-  当预测第$i$时间步$y_i$时使$y_{i-1}$为样本实际上一label，而不是上一次预测的计算结果$\hat{y}_i$
-
+  \quad \quad 候选隐藏状态$\tilde{s}_{t'} = tanh(W_{ys}y_{t'-1} + W_{ss}(s_{t'-1} \odot r_{t'}) + W_{cs}c_{t'} + b_s)$
 
 % --------------------------------------------------------------------------
 % |                              推荐算法                                   |
