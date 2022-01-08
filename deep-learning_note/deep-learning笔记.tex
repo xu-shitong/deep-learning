@@ -1732,7 +1732,121 @@
 
   \quad \quad \quad $AUC = \frac{1}{m}\sum_{u \in U}\frac{1}{|I \setminus |}$
   
+% --------------------------------------------------------------------------
+% |                         Information Theory                             |
+% --------------------------------------------------------------------------
+\section{Information Theory}
+\noindent \textbf{self information}
+
+  对长度为n的二进制数组X，self information$I(X) = -log_2(n)$\\
+\textbf{information定义}
+
+  0. \textbf{针对一random variable}
+
+  1. 两个random variable的总体information$\leq$ 分别得到两variable information后求和值。当两random variable independent，总体information = 两者information之和
+
+  2. 越固定的random variable，information 值越接近0
+\textbf{Shannon Entropy}
+
+  \textbf{针对一分部}
+
+  对random variable$X \sim P$，pdf为$p(X)$。
   
+  Shannon entropy为expected information $H(X) = -E_{x \sim P}(log(p(x)))$
+
+  \quad X离散时$H(X) = - \sum_{x} p(x)log(p(x))$
+
+  \quad X连续时$H(X) = -\int_{x} p(x)log(p(x)) \,dx $
+  
+  \textbf{取-log原因}
+  
+  \quad 取$X_1, X_2 \sim P$，由$p(X_1, X_2) = p(X_1)p(X_2)$，$logp(X_1, X_2) = log(p(X_1))log(p(X_2))$。满足information第1条定义
+  
+  \quad 取负，由于当$p(x)$升高时希望information值降低
+
+  \textbf{Entropy 性质}
+
+  \quad 令$X \sim P$，pdf为$p(x)$。当使用新分部 $Q$，pdf $q(x)$，estimate $X$时：
+
+  \quad \quad $H(X) = -E_{x \sim P}(log(x)) \leq -E_{x \sim P}(log(q(x)))$。
+
+  \quad \quad 仅当$Q = P$时等式成立
+
+  \quad 令$X \sim P$。当X均匀分部时entropy最大。
+
+  \quad \quad $H(X) \leq log(\frac{1}{k})$，离散P中k为类别数，连续P中k为值域
+
+  \quad \quad 即均匀分部时random variable 在不同类别/不同取值中的总体information最大化\\
+\textbf{joind entropy}
+
+  $H(X, Y) = -E_{(x, y) \sim P}(log(p_{X, Y}(x, y)))$
+
+  X，Y为离散random variable，$H(X, Y) = -\sum_x\sum_yp_{X, Y}(x, y)log(p_{X, Y}(x, y))$
+
+  X，Y为连续random variable，$H(X, Y) = -\int_{x, y} p_{X, Y}(x, y)log(p_{X, Y}(x, y)) \,dxdy$
+
+  $H(X), H(Y) \leq H(X, Y) \leq H(X) + H(Y)$
+  
+  \quad 证：当X，Y完全dependent，则$H(X) = H(Y) = H(X, Y)$。当X，Y完全independent，则$H(x) + H(Y) = H(X, Y)$\\
+\textbf{conditional entropy}
+
+  $H(Y | X) = -E_{(x, y) \sim P}(log(p(y | x)))$
+
+  X，Y离散：$H(Y | X) = \sum_x\sum_yp_{X, Y}(x, y)log(\frac{p_{X, Y}(x, y)}{p_X(x)})$
+
+  theorem: $H(Y | X) = H(X, Y) - H(X)$\\
+\textbf{mutual imformation}
+
+  定义：$I(X, Y) = H(X, Y) - H(X | Y) - H(Y | X)$
+
+  \quad '被X， Y共享的information。除去给定X或Y就能决定另一random variable的entropy'
+
+  \quad $ = E_xE_y(p_{X, Y}(x, y)log(\frac{p_{X, Y}(x, y)}{p_X(x)p_Y(y)}))$
+
+  \quad $ = H(X) - H(X | Y) = H(Y) - H(Y | X)$
+
+  \quad $ = H(X) + H(Y) - H(X, Y)$
+
+  性质：
+
+  \quad 1.symmetric：$I(X, Y) = I(Y, X)$
+
+  \quad 2.non-negative：$I(X, Y) \geq 0$
+
+  \quad 3.$I(X, Y)$ iff X, Y independent
+
+  \quad 4.与3.相反，$I(X, Y) = I(X) = I(Y)$ iff X，Y有bijection\\
+\textbf{Pointwise mutual information}
+
+  $pmi(x, y) = log(\frac{p_{X, Y}(x, y)}{p_X(x)p_Y(y)})$
+
+  (x, y)和假设$X, Y$independent时的近似程度\\
+\textbf{Kullback-Leibler Divergence/relative entropy}
+
+  计算两分部之间的距离
+
+  令$X \sim P$，有pdf$p(x)$。使用另一分部$Q$估计$P$，有pdf$q(x)$
+
+  relative entropy $D_{KL}(P || Q) = E_{x \sim P}(log(\frac{p(x)}{q(x)}))$
+
+  \quad 当$p(x) < q(x)$，$log(\frac{p(x)}{q(x)}))$为负值，绝对值较大
+  
+  \quad 当$p(x) > q(x)$，$log(\frac{p(x)}{q(x)}))$为正值，绝对值较大
+
+  性质：
+
+  \quad non-symmetric：$D_{KL}(P||Q) \neq D_{KL}(Q || P)$
+
+  \quad non-negative: $D_{KL}(P||Q) \geq 0$只有$P = Q$时取0
+
+  \quad 当存在x使得$p(x) > 0$，$q(x) = 0$。定义$D_{KL}(P||Q) = \infty$
+
+  \quad $I(X, Y) = D_{KL}(P(X, Y) || P(X)P(Y))$
+
+  \quad \quad $ = E_Y(D_{KL}(P(X | Y) || P(X)))$
+
+  \quad \quad $ = E_X(D_{KL}(P(Y | X) || P(Y)))$
+
 
 
 % --------------------------------------------------------------------------
