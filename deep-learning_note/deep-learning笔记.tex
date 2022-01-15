@@ -90,9 +90,18 @@
 
   $P(x' | x) = \frac{n(x, x') + \epsilon_2 P(x')}{n(x) + \epsilon_2}$
 
-  $P(x'' | x, x') = \frac{n(x, x', x'') + \epsilon_3 P(x' | x)}{n(x, x') + \epsilon_3}$
+  $P(x'' | x, x') = \frac{n(x, x', x'') + \epsilon_3 P(x' | x)}{n(x, x') + \epsilon_3}$\\
+\textbf{函数卷积}
 
-  % --------------------------------------------------------------------------
+  对函数$f, g : \mathbb{R}^n \mapsto \mathbb{C}$，定义函数卷积$(f * g)(x) = \int_{\mathbb{R}^n} f(\tau)g(x - \tau) \,d\tau$
+
+  \quad $f, g$取离散值时，$(f * g)(x) = \sum_\tau f(\tau)g(x - \tau)$
+
+  卷积有交换律：$f * (g * h) = (f * g) * h$，结合律：$f * (g + h) = (f * g) + (f * h)$
+
+  求导：$\frac{d }{dx}(f * g) = \frac{d f}{dx} * g = f * \frac{dg}{dx}$
+
+% --------------------------------------------------------------------------
 % |                           perceptron 分类算法                           |
 % --------------------------------------------------------------------------
 \section{perceptron 分类算法}
@@ -585,7 +594,7 @@
 
   \quad 在$[0, T)$范围内选择一起始位置$s$，每$T$长度分为一样本。共得到$\lfloor \frac{S - s}{T} \rfloor$样本
 
-  \quad 随机选择$B$个样本作为一批量数据
+  \quad 随机选择$B$个样本作为一批量数据。不同批量间不重复使用样本
 
   \quad 训练不同样本时不能将前一次隐藏层结果纳入计算
   
@@ -1852,12 +1861,111 @@
 
   \quad \quad $ = E_X(D_{KL}(P(Y | X) || P(Y)))$
 
+% --------------------------------------------------------------------------
+% |                         图像处理 (CV 课程笔记)                           |
+% --------------------------------------------------------------------------
+\section{图像处理 (CV 课程笔记)}
+\noindent 聚焦公式：
 
+  令f为凸透镜焦距，u为物距，v为相距。则$\frac{1}{f} = \frac{1}{u} + \frac{1}{v}$\\
+quantisation：相机得到颜色值为连续值，存储时为离散值。连续值转离散值称quantisation\\
+image filter：
+
+  卷积操作，步幅1\ 填充(卷积核边长 / 2)。
+  
+  Average filter：卷积核内所有值相同，相加为1。
+
+  Gaussian filter：令卷积核中心为(0, 0)
+
+  \quad $h(i, j) = \frac{1}{2\pi\sigma^2}e^{-\frac{i^2+j^2}{2\sigma^2}}$
+
+  \quad \quad $ = h_x(i) h_y(j)$
+
+  \quad \quad $h_x(i) = \frac{1}{2\pi\sigma^2}e^{-\frac{i^2}{2\sigma^2}}$，$h_y(j)$同理
+  
+  High-pass filter：
+
+  \quad identity卷积核：仅有中心值为1，其余值都为0
+
+  \quad high-frequency部分：identity卷积核 - average filter
+
+  \quad high-pass卷积核 = identity - high-frequency卷积核。即卷积核中心以外的值相等，为负。中心值 > 1
+
+  median filter：对卷积核覆盖的像素取中位数输出\\
+linear time filter：当输入移动一offset时输出移动相同offset，并输出值不变\\
+edge detection
+
+  离散值中求导：
+  
+  \quad forward difference：$f'(x) = f(x + 1) - f(x)$
+
+  \quad backward difference：$f'(x) = f(x + 1) - f(x)$
+  
+  \quad central difference：$f'(x) = \frac{f(x + 1) - f(x - 1)}{2}$
+
+  卷积核中求导：forward：$[1, -1, 0]$，backward：$[[0, 1, -1]]$，central：$[1, 0, -1]$
+
+  Prewitt filter：
+
+  \quad 竖直卷积核$h_v = \begin{bmatrix}
+    1 & 0 & -1 \\
+    1 & 0 & -1 \\
+    1 & 0 & -1
+    \end{bmatrix}$
+    水平卷积核$h_h = \begin{bmatrix}
+      1 & 1 & 1 \\
+      0 & 0 & 0 \\
+      -1 & -1 & -1
+      \end{bmatrix}$
+
+  Sobel filter：
+
+  \quad 竖直卷积核$h_v = \begin{bmatrix}
+    1 & 0 & -1 \\
+    2 & 0 & -2 \\
+    1 & 0 & -1
+    \end{bmatrix}$
+    水平卷积核$h_h = \begin{bmatrix}
+      1 & 2 & 1 \\
+      0 & 0 & 0 \\
+      -1 & -2 & -1
+      \end{bmatrix}$
+
+  \textbf{Prewitt filter, Sobel filter 2卷积核分别计算图像在水平/竖直方向的斜率}
+
+  \quad $g_h = f * h_h$每一像素水平方向斜率，$g_v = f * h_v$像素竖直方向斜率
+
+  \quad $g = \sqrt{g_h^2 + g_v^2}$此像素总体斜率
+
+  \quad $\theta = tan^{-1}(g_v, g_h)$每一像素仅有唯一角度值
+
+  Canny edge detection：
+
+  \quad 使边界输出1，非边界为0
+
+  \quad 1. 使用Gaussian filter减少noise
+
+  \quad 2. 使用Prewitt或Sobel计算像素斜率
+
+  \quad 3. 每一像素进行非极大值抑制得到单一标量，代表其为边界的权重
+
+  \quad \quad 非极大值抑制\textbf{(不同于SSD)}：
+
+  \quad \quad \quad 将像素周围角度分为8个区间，每一区间中心为一临近像素
+
+  \quad \quad \quad 选择2区间使得\ 此像素角度值穿过两区间
+
+  \quad \quad \quad 当两区间对应的像素\ 总体斜率\ 都小于此像素总体斜率，则此像素有权重为总体斜率，否则权重为0
+
+  \quad 4. 边界权重在high threshould以上的像素有像素值1，在low high threshould间的像素有值0.5。否则像素值为0
+
+  \quad 5. 对所有值为0.5的像素，若临近8像素有值为1像素，则此像素值调为1
+
+  \quad \quad 可根据更新后的临近像素值判断是否调整0.5为1
 
 % --------------------------------------------------------------------------
 % |                       Deep Learning 第6章笔记                           |
 % --------------------------------------------------------------------------
-
 \section{Deep Feedforward Network (Deep Learning 第6章笔记)}
 \noindent \textbf{SVM支持向量机}
 
