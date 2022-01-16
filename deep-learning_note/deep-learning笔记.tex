@@ -1961,7 +1961,97 @@ edge detection
 
   \quad 5. 对所有值为0.5的像素，若临近8像素有值为1像素，则此像素值调为1
 
-  \quad \quad 可根据更新后的临近像素值判断是否调整0.5为1
+  \quad \quad 可根据更新后的临近像素值判断是否调整0.5为1\\
+Hough transformation：
+
+  将边界检测图像结果转换为边界的函数表达式，允许有多个边界表达式
+
+  \quad slope intercept form：$y = mx + b$
+
+  \quad \quad 求解：每一边界像素(p, q)对应$q = mp + b$对应一m-b函数表达式
+
+  \quad \quad \quad 对所有m-b函数，每一函数上点分配一权重。函数有交点时权重叠加
+  
+  \quad \quad \quad 最终权重大于一threshould的(m, b)点为一边界。
+
+  \quad double intercept form：$\frac{x}{a} + \frac{y}{b} = 1$。即椭圆
+
+  \quad normal form：$x\cos(\theta) + y\sin(\theta) = \rho$
+
+  \quad \quad 求解：同slope intercept，函数为$\theta$-$\rho$
+
+  \quad 圆弧边界：
+
+  \quad \quad 方法1：$(x - a)^2 + (y - b)^2 = r^2$
+
+  \quad \quad 方法2：$x = a + r\cos(\theta), y = b + r\sin(\theta)$
+  
+  \quad \quad \quad 限定$r \in [r_{min}, r_{max}]$
+
+  \quad \quad \quad 对每一可能的r值求$a = x - r\cos(\theta)$, $b = y - r\sin(\theta)$，$\theta$取像素(x, y)位置的角度
+
+  \quad \quad \quad 对(a, b, r)位置的权重+1，最终选择一组(a, b, r)使得权重高于一threshould\\
+Interest Point Detection 
+
+  image matching：将两张图中像素对应，如图片连接。为一种interest point detection 
+
+  Harris detector：
+
+  \quad 对图片一区域W内的像素
+
+  \quad 定义$E(u, v) = \sum_{(x, y) \in W} w(x, y)[h(x + u, y + v) - h(x, y)]^2$
+
+  \quad \quad $w(x, y)$为window function，
+  
+  \quad \quad \quad idle function：(x, y)在W内时为1，否则为0。
+  
+  \quad \quad \quad Gaussian function：不论(x, y)是否在W内，根据(x, y)距离W中心的距离取Gaussian分部值
+
+  \quad \quad $h(x, y)$即(x, y)位置的总体斜率
+  
+  \quad Taylor expansion：
+
+  \quad \quad $h(x + u, y + v) = h(x, y) + uh_x(x, y) + vh_y(x, y)$
+
+  \quad \quad 带入得$E(u, v) = [u, v]\sum_{(x, y) \in W}w(x, y)
+    \begin{bmatrix}
+      h_x(x, y)^2 & h_x(x, y)h_y(x, y) \\
+      h_x(x, y)h_y(x, y) & h_y(x, y)^2
+      \end{bmatrix}
+    \begin{bmatrix}
+      u \\ 
+      v
+      \end{bmatrix}$
+
+  \quad \quad 令$M = \sum_{(x, y) \in W}w(x, y)
+    \begin{bmatrix}
+      h_x(x, y)^2 & h_x(x, y)h_y(x, y) \\
+      h_x(x, y)h_y(x, y) & h_y(x, y)^2
+      \end{bmatrix}$
+
+  \quad \quad 则$M$symmetric，有$M = P 
+    \begin{bmatrix}
+      \lambda_1 & 0 \\
+      0 & \lambda_2
+      \end{bmatrix} P^T$
+
+  \quad \quad \quad 当$M$为全零矩阵/$\lambda_1,\lambda_2 \sim 0$时，**(u, v)或(x, y)**不在边界
+
+  \quad \quad \quad 当$M_{00} >> M_{11}$/$\lambda_1 >> \lambda_2$，在竖直edge上
+
+  \quad \quad \quad 当$M_{00} << M_{11}$/$\lambda_1 << \lambda_2$，在水平edge上
+
+  \quad \quad \quad 当$M_{00}, M_{11}$较大/$\lambda_1, \lambda_2$较大时，在边界拐点
+
+  \quad 定义一点在边界/拐点几率：
+
+  \quad \quad Harris and Stephens：$R = \lambda_1\lambda_2 - k(\lambda_1 + \lambda_2)^2$，k常取0.05
+
+  \quad \quad Kanade and Tomasi：$R = min(\lambda_1, \lambda_2)$
+
+  \quad \quad Noble：$R = \frac{\lambda_1\lambda_2}{\lambda_1 + \lambda_2 + \epsilon}$
+
+  \quad \quad 简化以上计算：$det(M) = \lambda_1\lambda_2$，$trace(M) = \lambda_1 + \lambda_2$
 
 % --------------------------------------------------------------------------
 % |                       Deep Learning 第6章笔记                           |
