@@ -29,6 +29,27 @@
 \textbf{sigmoid函数}：$\sigma(x) = \frac{1}{1+e^{-x}}$\\
 \textbf{tanh函数}：$tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$\\
 \textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正\ 2. 值总和为1\\
+\textbf{Parapetric ReLU}：
+
+  \begin{equation*}
+    PReLU(x) = \begin{cases}
+      \alpha x & x < 0\\
+      x & x \geq 0
+    \end{cases}
+  \end{equation*}
+  
+  $\alpha$ 训练时更新\\
+\textbf{leaky ReLU}：
+
+  同PReLU，$\alpha$为超参数\\
+\textbf{Exponential LU}
+
+  \begin{equation*}
+    ELU(x) = \begin{cases}
+      \alpha (e^x - 1) & x < 0\\
+      x & x \geq 0
+    \end{cases}
+  \end{equation*}\\
 \textbf{catagorical cross entropy交叉熵}
 
   定义：分部p\ 和\ 分部q\ 间的\ cross entropy $H(p, q) = -E_p(\log (q))$。为\ expected value of $log (q)$ with respect to distribution p
@@ -99,7 +120,12 @@
 
   卷积有交换律：$f * (g * h) = (f * g) * h$，结合律：$f * (g + h) = (f * g) + (f * h)$
 
-  求导：$\frac{d }{dx}(f * g) = \frac{d f}{dx} * g = f * \frac{dg}{dx}$
+  求导：$\frac{d }{dx}(f * g) = \frac{d f}{dx} * g = f * \frac{dg}{dx}$\\
+\textbf{Cosine distance}
+
+  $d(x, y) = \frac{x \cdot y}{\|x\|\|y\|}$
+
+  即向量x,y夹角
 
 % --------------------------------------------------------------------------
 % |                           perceptron 分类算法                           |
@@ -293,6 +319,9 @@
 \textbf{步幅stride}：
 
   定义每次感受野向左/向下移动的纬度\\
+\textbf{dilation}
+
+  在较大卷积核中仅选择某些矩阵元素赋权重进行卷积计算，其余权重为0\\
 \textbf{多通道输入输出}：
 
   当输入的数据包含多个矩阵，即多通道输入，例：RGB图像有3个输入通道
@@ -2181,7 +2210,7 @@ Histogram of Oriented Gradient HOG
   \quad 多个grid 组成一block，有合并的locally normalized descriptor$v_{norm} = \frac{[v_1, v_2, ...]}{\sqrt{||[v_1, v_2, ...]||_2^2 + \epsilon^2}}$
 
   \quad 将block位置按卷积操作移动，HOG descriptor为所有block的descriptor连接\\
-image classification
+Image Classification
 
   
   
