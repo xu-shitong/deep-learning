@@ -125,7 +125,14 @@
 
   $d(x, y) = \frac{x \cdot y}{\|x\|\|y\|}$
 
-  即向量x,y夹角
+  即向量x,y夹角\\
+\textbf{Euler-Lagrange equation}
+
+  定义：$u$为一函数，$u'(t) = \frac{du(t)}{du}$，$S(u)= \int_{t} L(t, u(t), u'(t)) \,dt$。
+
+  Theorem：u为一S的stationary point
+  
+  \quad iff $\frac{L(t, u(t), u'(t))}{du} - \frac{L(t, u(t), u'(t))}{d(u'(t))dt}$
 
 % --------------------------------------------------------------------------
 % |                           perceptron 分类算法                           |
@@ -2210,13 +2217,186 @@ Histogram of Oriented Gradient HOG
   \quad 多个grid 组成一block，有合并的locally normalized descriptor$v_{norm} = \frac{[v_1, v_2, ...]}{\sqrt{||[v_1, v_2, ...]||_2^2 + \epsilon^2}}$
 
   \quad 将block位置按卷积操作移动，HOG descriptor为所有block的descriptor连接\\
-Image Classification
+Optic Flow
 
-  
-  
+  估计视频中的亮度在x,y方向分别移动(u, v)
 
+  假设：
 
+  \quad brightness constancy：两帧间物体上同一点亮度相同
+
+  \quad small motion：两帧间物体上同一点移动距离较小
+
+  \quad spatial coherence：相邻像素的移动方向相近
   
+  由假设得$h(x + u, y+v, t+1) = h(x, y, t) \approx h(x, y, t) + \frac{dh}{dx}u + \frac{dh}{dy}v + \frac{dh}{dt}$
+
+  \quad 则对每一像素(x, y)都有$\frac{dh}{dx}u + \frac{dh}{dy}v + \frac{dh}{dt} = 0$
+
+  Lucas-Kanade Method：计算(u, v)
+
+  \quad 对每一像素$p_i$：$[\frac{dh}{dx}(p_i), \frac{dh}{dy}(p_i)][u, v]^T = [-\frac{dh}{dt}(p_i)]$
+
+  \quad 令
+    $A = 
+    \begin{bmatrix}
+      \frac{dh}{dx}(p_1) & \frac{dh}{dy}(p_1) \\ 
+      \frac{dh}{dx}(p_2) & \frac{dh}{dy}(p_2) \\ 
+      ...
+      \end{bmatrix}$, 
+    $x = [u, v]^T$,
+    $b = 
+    \begin{bmatrix}
+      \frac{dh}{dt}(p_1) \\ 
+      \frac{dh}{dt}(p_2) \\ 
+      ...
+      \end{bmatrix}$
+    则Ax = -b
+
+  \quad 取$x = argmin_x\|Ax + b\|$为最优$[u, v]^T$
+
+  \quad 则有$x = (A^TA)^{-1}A^Tb$
+
+  \quad \quad $A^TA = \sum_{p_i}
+    \begin{bmatrix}
+      \frac{dh}{dx}(p_i)^2 & \frac{dh}{dx}(p_i)\frac{dh}{dy}(p_i) \\ 
+      \frac{dh}{dx}(p_i)\frac{dh}{dy}(p_i) & \frac{dh}{dy}(p_i)^2
+      \end{bmatrix}$
+
+  \quad \quad $A^Tb = - \sum_{p_i}
+    \begin{bmatrix}
+      \frac{dh}{dx}(p_i)\frac{dh}{dt}(p_i) \\ 
+      \frac{dh}{dy}(p_i)\frac{dh}{dt}(p_i)
+      \end{bmatrix}$
+
+  Horn-Schunck method：每一像素有(u, v)
+
+  \quad 最小化$E = \int_{p_i} (\frac{dh}{dx}(p_i)u + \frac{dh}{dy}(p_i)v + \frac{dh}{dt}(p_i))^2 + \alpha (\Delta u^2 + \Delta v^2) \,dxdy $
+
+  \quad \quad 即最小化临近像素的方向向量改变量
+
+  \quad 由Euler Lagrange equation：
+
+  \quad \quad $(\frac{dh}{dx}(p_i)u + \frac{dh}{dy}(p_i)v + \frac{dh}{dt}(p_i))\frac{dh}{dx}(p_i) - \alpha\Delta u = 0$
+  
+  \quad \quad $(\frac{dh}{dx}(p_i)u + \frac{dh}{dy}(p_i)v + \frac{dh}{dt}(p_i))\frac{dh}{dy}(p_i) - \alpha\Delta v = 0$
+ 
+  \quad \quad \quad Laplace operator：$\Delta = dxx + dyy$
+
+  \quad 带入$\Delta u = \bar{u} - u$
+
+  \quad \quad $(\frac{dh}{dx}(p_i)^2 + \alpha)u + \frac{dh}{dx}(p_i)\frac{dh}{dy}(p_i)v = \alpha \bar{u} - \frac{dh}{dx}(p_i))\frac{dh}{dt}(p_i)$
+  
+  \quad \quad $(\frac{dh}{dy}(p_i)^2 + \alpha)v + \frac{dh}{dx}(p_i)\frac{dh}{dy}(p_i)u = \alpha \bar{v} - \frac{dh}{dy}(p_i))\frac{dh}{dt}(p_i)$
+
+  \quad 得到$u, v$关于$\bar{u}, \bar{v}$的公式
+
+  Lucas-Kanade Tracker
+
+  \quad 针对原图像I，J
+
+  \quad 取(u, v)，使得将图像I按(u, v)方向移动后和J像素平方差之和最小
+
+  \quad \quad 即$\min_{u, v}\sum_{(x, y) \in pixels}(I(x, y) - J(x + u, y + v))^2$
+
+  \quad 求解：对u, v微分
+
+  \quad \quad $\frac{dE}{du} = 2\sum_{(x, y)}(I(x, y) - J(x + u, y  + v))\frac{d-J(x + u)}{du}$
+
+  \quad \quad \quad $ = -2\sum_{(x, y)}(I(x, y) - J(x + u, y  + v))\frac{J}{dx}$
+
+  \quad \quad \quad $ = -2\sum_{(x, y)}(I(x, y) - J(x, y) - \frac{dJ}{dx}u - \frac{dJ}{dy}v)\frac{J}{dx}$
+
+  \quad \quad \quad $ = -2\sum_{(x, y)}(-I_t - I_xu - I_yv)I_x$
+
+  \quad \quad \quad v公式同理：$ = -2\sum_{(x, y)}(-I_t - I_xu - I_yv)I_y$
+
+  \quad \quad 令两微分值为0：
+
+  \quad \quad \quad $-\sum_{(x, y)}
+    \begin{bmatrix}
+      I_xI_t \\
+      I_yI_t
+      \end{bmatrix} - \sum_{(x, y)}
+    \begin{bmatrix}
+      I_x^2 & I_xI_y \\
+      I_xI_y & I_y^2
+      \end{bmatrix}
+    \begin{bmatrix}
+      u \\
+      v
+      \end{bmatrix}
+    = 0$
+
+  \quad \quad \quad $
+    \begin{bmatrix}
+      u \\
+      v
+      \end{bmatrix}
+    = 
+    \sum_{(x, y)}
+    \begin{bmatrix}
+      I_x^2 & I_xI_y \\
+      I_xI_y & I_y^2
+      \end{bmatrix}^{-1}
+    \sum_{(x, y)}
+    \begin{bmatrix}
+      I_xI_t \\
+      I_yI_t
+      \end{bmatrix}$\\
+Camera Model 
+
+  由2d图像预测观测点位置
+
+  令$X = 
+    \begin{bmatrix}
+      x \\
+      y \\
+      z \\
+      1
+      \end{bmatrix}$, $
+    \begin{bmatrix}
+      x \\
+      y \\
+      z
+      \end{bmatrix} 
+    =
+    \begin{bmatrix}
+      p_1^T \\
+      p_2^T \\
+      p_3^T
+      \end{bmatrix}
+    \begin{bmatrix}
+      x \\
+      y \\
+      z \\
+      1
+      \end{bmatrix}$
+
+  prospective 投影后$x = \frac{p_1^TX}{p_3^TX}$, $y = \frac{p_2^TX}{p_3^TX}$
+
+  \quad 可得$X^Tp_1 - X^Tp_3x = 0$, $X^Tp_2 - X^Tp_3y = 0$
+
+  \quad $
+    \begin{bmatrix}
+      X^T & 0 & -X^Tx \\
+      0 & X^T & -X^Ty
+      \end{bmatrix}
+    \begin{bmatrix}
+      p_1 \\
+      p_2 \\
+      p_3
+      \end{bmatrix}
+    = 0$
+
+  \quad \quad 令第一矩阵为A，有形状为(2, 12)。第二矩阵$\vec{p}$形状(12, 1)
+
+  \quad 以上针对一像素(x, y, z)位置。对n个像素，第一矩阵形状为(2*n, 12)，解$\vec{p} = argmin_p \|A\vec{p}\|^2$
+
+  \quad \quad 加入条件$\|\vec{p}\| = 1$，使$\vec{p} = 0$不为有效解
+
+  \quad \quad 求解：求SVD：$A = USV^T$，$\vec{p}$为A$V$中对对应最小singular value的列
+
 
 % --------------------------------------------------------------------------
 % |                       Deep Learning 第6章笔记                           |
