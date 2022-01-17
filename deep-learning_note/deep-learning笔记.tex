@@ -2043,7 +2043,7 @@ Interest Point Detection
 
   \quad \quad \quad 当$M_{00}, M_{11}$较大/$\lambda_1, \lambda_2$较大时，在边界拐点
 
-  \quad 定义一点在边界/拐点几率：
+  \quad 定义一点在拐点几率：
 
   \quad \quad Harris and Stephens：$R = \lambda_1\lambda_2 - k(\lambda_1 + \lambda_2)^2$，k常取0.05
 
@@ -2052,6 +2052,142 @@ Interest Point Detection
   \quad \quad Noble：$R = \frac{\lambda_1\lambda_2}{\lambda_1 + \lambda_2 + \epsilon}$
 
   \quad \quad 简化以上计算：$det(M) = \lambda_1\lambda_2$，$trace(M) = \lambda_1 + \lambda_2$
+
+  scaling 后图像进行interest point detection：
+
+  \quad $M = \sum_{(x, y) \in W}w(x, y)\sigma^2
+    \begin{bmatrix}
+      h_x(x, y, \sigma)^2 & h_x(x, y, \sigma)h_y(x, y, \sigma) \\
+      h_x(x, y, \sigma)h_y(x, y, \sigma) & h_y(x, y, \sigma)^2
+      \end{bmatrix}$
+
+  \quad \quad **其中$h_x(x, y, \sigma)$为**
+
+  Laplacian of Gaussian LoG：
+
+  \quad 一像素输出值为此像素的二阶导，即$\Delta f = \frac{d^2f}{dx^2} + \frac{d^2f}{dy^2}$
+
+  \quad \quad 即使用卷积核$
+    \begin{bmatrix}
+      0 & 1 & 0 \\
+      1 & -4 & 1 \\
+      0 & 1 & 0
+      \end{bmatrix}$
+
+  \quad LoG为在使用Gaussian filter后求二阶导
+
+  Difference of Gaussian DoG
+  
+  \quad $DoG(x, y, \sigma) = I * G(k\sigma) - I * G(\sigma)$\\
+Feature Description
+
+  根据descriptor将不同图像上的像素对应
+
+  \quad pixel intensity：相同intensity的像素一一对应
+
+  \quad patch intensity：使一区域以内的像素intensity对应
+
+  \quad gradient orientation：相同斜率和角度的像素对应
+
+  \quad histogram：收集一区域以内的像素intensity 分部，相同分部的区域对应
+
+  Scale-invariant Feature Transform SIFT
+
+  \quad 计算N个Gaussian filter结果，其中$\sigma$值取$\sqrt{2}, 2, 2\sqrt{2}, 4,...$
+
+  \quad 相邻Gaussian filter间计算差值，得到N-1个DoG结果
+
+  \quad key point assignment：**得到最优的$v = (x, y, \sigma)$使得$DoG(v)$最大化
+
+  \quad \quad 通过Taylor 展开：$DoG(v + \delta) = DoG(v) + \frac{dDoG^T}{dv}\delta + \frac{1}{2}\delta^T\frac{d^2DoG}{dv^2}\delta$
+
+  \quad \quad \quad 则$\frac{dDoG(v + \delta)}{d\delta} = \frac{dDoG}{dv} + \frac{d^2DoG}{dv^2}$
+
+  \quad \quad \quad 取$\frac{dDoG(v + \delta)}{d\delta} = 0$，则$\delta = -\frac{d^2DoG}{dv^2}^{-1}\frac{dDoG}{v}$。$DoG(v + \delta)$有最值
+
+  \quad orientation assignment：
+
+  \quad \quad 在keypoint周围采样像素，窗口大小$\propto \sigma$
+
+  \quad \quad 将采样的像素分入网格：每一网格内将方向分为8区间，采样的方向在8区域的分部
+
+  \quad keypoint matching
+
+  \quad \quad 使用euclidian distance对应两图key point
+
+  \quad \quad 一对key point(u, v)(x, y)得到key point间转换表达式：
+
+  \quad \quad \quad $[u, v]^T = 
+    \begin{bmatrix}
+      m_1 & m_2 \\
+      m_3 & m_4
+      \end{bmatrix}
+    [x, y]^T + [b_1, b_2]^T$
+
+  \quad \quad \quad 对所有key point pair$(u_i, v_i)$, $(x_i, y_i)$：
+
+  \quad \quad \quad $
+    \begin{bmatrix}
+      x_1 & y_1 & 0 & 0 & 1 & 0 \\
+      0 & 0 & x_1 & y_1 & 0 & 1 \\
+      x_2 & y_2 & 0 & 0 & 1 & 0 \\
+      0 & 0 & x_2 & y_2 & 0 & 1 \\
+      ... 
+      \end{bmatrix}
+    \begin{bmatrix}
+      m_1 \\
+      m_2 \\
+      m_3 \\ 
+      m_4 \\
+      b_1 \\
+      b_2
+      \end{bmatrix}
+    =
+    \begin{bmatrix}
+      u_1 \\
+      v_1 \\
+      u_2 \\ 
+      v_2 \\
+      ...
+      \end{bmatrix}$
+
+  \quad \quad \quad 简写为Am = b
+  \quad \quad \quad 求解$m = (A^TA)^{-1}A^Tb$
+  
+  Speeded-Up Robust Feature SRUF：feature descriptor
+
+  \quad Haar wavelets：每一采样仅在水平/竖直方向取斜率$d_h, d_v$，斜率使用1/-1表示。(而非使用8方向的斜率求和)
+
+  \quad descriptor：$(\sum d_x, \sum d_y, \sum |d_x|, \sum |d_y|)$
+
+  Binary Robust Independent Elementary Feature BRIEF：
+
+  \quad \begin{equation*}
+      \tau(p, q) = \begin{cases}
+      1 & h(p) > h(q)\\
+      0 & otherwise
+      \end{cases}
+    \end{equation*}
+
+  \quad 在一像素周围取$n_d$对像素$(p_i, q_i)$，descriptor为$\sum_{i \leq n_d} \tau(p_i, q_i) << i$
+
+  \quad descriptor间距离为两descriptor XOR值\\
+Histogram of Oriented Gradient HOG 
+
+  对一区域的像素计算feature：
+
+  \quad 将图像整体分为网格(非在某一像素周围分网格)，每一grid计算gradient orientation histogram向量$v$
+
+  \quad 多个grid 组成一block，有合并的locally normalized descriptor$v_{norm} = \frac{[v_1, v_2, ...]}{\sqrt{||[v_1, v_2, ...]||_2^2 + \epsilon^2}}$
+
+  \quad 将block位置按卷积操作移动，HOG descriptor为所有block的descriptor连接\\
+image classification
+
+  
+  
+
+
+  
 
 % --------------------------------------------------------------------------
 % |                       Deep Learning 第6章笔记                           |
