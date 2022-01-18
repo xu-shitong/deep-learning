@@ -112,6 +112,9 @@
   $P(x' | x) = \frac{n(x, x') + \epsilon_2 P(x')}{n(x) + \epsilon_2}$
 
   $P(x'' | x, x') = \frac{n(x, x', x'') + \epsilon_3 P(x' | x)}{n(x, x') + \epsilon_3}$\\
+\textbf{Laplace operator $\Delta$}
+
+  对函数$f(x, y)$：$\Delta f = \frac{d^2f}{dx^2} + \frac{d^2f}{dy^2}$\\
 \textbf{函数卷积}
 
   对函数$f, g : \mathbb{R}^n \mapsto \mathbb{C}$，定义函数卷积$(f * g)(x) = \int_{\mathbb{R}^n} f(\tau)g(x - \tau) \,d\tau$
@@ -2035,7 +2038,7 @@ Interest Point Detection
 
   \quad 对图片一区域W内的像素
 
-  \quad 定义$E(u, v) = \sum_{(x, y) \in W} w(x, y)[h(x + u, y + v) - h(x, y)]^2$
+  \quad 定义$E(u, v) = \sum_{(x, y) \in W} w(x, y)[I(x + u, y + v) - I(x, y)]^2$
 
   \quad \quad $w(x, y)$为window function，
   
@@ -2043,16 +2046,18 @@ Interest Point Detection
   
   \quad \quad \quad Gaussian function：不论(x, y)是否在W内，根据(x, y)距离W中心的距离取Gaussian分部值
 
-  \quad \quad $h(x, y)$即(x, y)位置的总体斜率
+  \quad \quad $I(x, y)$即(x, y)位置的亮度
   
   \quad Taylor expansion：
 
-  \quad \quad $h(x + u, y + v) = h(x, y) + uh_x(x, y) + vh_y(x, y)$
+  \quad \quad $I(x + u, y + v) = I(x, y) + uI_x(x, y) + vI_y(x, y)$
+
+  \quad \quad \quad $I_x, I_y$为图像在x, y位置的斜率**即$g_x, g_y$**
 
   \quad \quad 带入得$E(u, v) = [u, v]\sum_{(x, y) \in W}w(x, y)
     \begin{bmatrix}
-      h_x(x, y)^2 & h_x(x, y)h_y(x, y) \\
-      h_x(x, y)h_y(x, y) & h_y(x, y)^2
+      I_x(x, y)^2 & I_x(x, y)I_y(x, y) \\
+      I_x(x, y)I_y(x, y) & I_y(x, y)^2
       \end{bmatrix}
     \begin{bmatrix}
       u \\ 
@@ -2061,8 +2066,8 @@ Interest Point Detection
 
   \quad \quad 令$M = \sum_{(x, y) \in W}w(x, y)
     \begin{bmatrix}
-      h_x(x, y)^2 & h_x(x, y)h_y(x, y) \\
-      h_x(x, y)h_y(x, y) & h_y(x, y)^2
+      I_x(x, y)^2 & I_x(x, y)I_x(x, y) \\
+      I_x(x, y)I_x(x, y) & I_y(x, y)^2
       \end{bmatrix}$
 
   \quad \quad 则$M$symmetric，有$M = P 
@@ -2093,15 +2098,15 @@ Interest Point Detection
 
   \quad $M = \sum_{(x, y) \in W}w(x, y)\sigma^2
     \begin{bmatrix}
-      h_x(x, y, \sigma)^2 & h_x(x, y, \sigma)h_y(x, y, \sigma) \\
-      h_x(x, y, \sigma)h_y(x, y, \sigma) & h_y(x, y, \sigma)^2
+      I_x(x, y, \sigma)^2 & I_x(x, y, \sigma)I_y(x, y, \sigma) \\
+      I_x(x, y, \sigma)I_y(x, y, \sigma) & I_y(x, y, \sigma)^2
       \end{bmatrix}$
 
-  \quad \quad **其中$h_x(x, y, \sigma)$为**
+  \quad \quad **其中$I_x(x, y, \sigma)$为**
 
   Laplacian of Gaussian LoG：
 
-  \quad 一像素输出值为此像素的二阶导，即$\Delta f = \frac{d^2f}{dx^2} + \frac{d^2f}{dy^2}$
+  \quad 一像素输出值为此像素的二阶导，即对亮度$I$使用Laplace operator $\Delta I$
 
   \quad \quad 即使用卷积核$
     \begin{bmatrix}
@@ -2229,26 +2234,26 @@ Optic Flow
 
   \quad spatial coherence：相邻像素的移动方向相近
   
-  由假设得$h(x + u, y+v, t+1) = h(x, y, t) \approx h(x, y, t) + \frac{dh}{dx}u + \frac{dh}{dy}v + \frac{dh}{dt}$
+  由假设得$I(x + u, y + v, t + 1) = I(x, y, t) \approx I(x, y, t) + \frac{dI}{dx}u + \frac{dI}{dy}v + \frac{dI}{dt}$
 
-  \quad 则对每一像素(x, y)都有$\frac{dh}{dx}u + \frac{dh}{dy}v + \frac{dh}{dt} = 0$
+  \quad 则对每一像素(x, y)都有$I_xu + I_yv + I_t = 0$
 
   Lucas-Kanade Method：计算(u, v)
 
-  \quad 对每一像素$p_i$：$[\frac{dh}{dx}(p_i), \frac{dh}{dy}(p_i)][u, v]^T = [-\frac{dh}{dt}(p_i)]$
+  \quad 对每一像素$p_i$：$[I_x(p_i), I_y(p_i)][u, v]^T = [-I_t(p_i)]$
 
   \quad 令
     $A = 
     \begin{bmatrix}
-      \frac{dh}{dx}(p_1) & \frac{dh}{dy}(p_1) \\ 
-      \frac{dh}{dx}(p_2) & \frac{dh}{dy}(p_2) \\ 
+      I_x(p_1) & I_y(p_1) \\ 
+      I_x(p_2) & I_y(p_2) \\ 
       ...
       \end{bmatrix}$, 
     $x = [u, v]^T$,
     $b = 
     \begin{bmatrix}
-      \frac{dh}{dt}(p_1) \\ 
-      \frac{dh}{dt}(p_2) \\ 
+      I_t(p_1) \\ 
+      I_t(p_2) \\ 
       ...
       \end{bmatrix}$
     则Ax = -b
@@ -2259,35 +2264,35 @@ Optic Flow
 
   \quad \quad $A^TA = \sum_{p_i}
     \begin{bmatrix}
-      \frac{dh}{dx}(p_i)^2 & \frac{dh}{dx}(p_i)\frac{dh}{dy}(p_i) \\ 
-      \frac{dh}{dx}(p_i)\frac{dh}{dy}(p_i) & \frac{dh}{dy}(p_i)^2
+      I_x(p_i)^2 & I_x(p_i)I_y(p_i) \\ 
+      I_x(p_i)I_y(p_i) & I_y(p_i)^2
       \end{bmatrix}$
 
   \quad \quad $A^Tb = - \sum_{p_i}
     \begin{bmatrix}
-      \frac{dh}{dx}(p_i)\frac{dh}{dt}(p_i) \\ 
-      \frac{dh}{dy}(p_i)\frac{dh}{dt}(p_i)
+      I_x(p_i)I_t(p_i) \\ 
+      I_y(p_i)I_t(p_i)
       \end{bmatrix}$
 
   Horn-Schunck method：每一像素有(u, v)
 
-  \quad 最小化$E = \int_{p_i} (\frac{dh}{dx}(p_i)u + \frac{dh}{dy}(p_i)v + \frac{dh}{dt}(p_i))^2 + \alpha (\Delta u^2 + \Delta v^2) \,dxdy $
+  \quad 最小化$E = \int_{p_i} (I_x(p_i)u + I_y(p_i)v + I_t(p_i))^2 + \alpha (\Delta u^2 + \Delta v^2) \,dxdy $
 
   \quad \quad 即最小化临近像素的方向向量改变量
 
   \quad 由Euler Lagrange equation：
 
-  \quad \quad $(\frac{dh}{dx}(p_i)u + \frac{dh}{dy}(p_i)v + \frac{dh}{dt}(p_i))\frac{dh}{dx}(p_i) - \alpha\Delta u = 0$
+  \quad \quad $(I_x(p_i)u + I_y(p_i)v + I_t(p_i))I_x(p_i) - \alpha\Delta u = 0$
   
-  \quad \quad $(\frac{dh}{dx}(p_i)u + \frac{dh}{dy}(p_i)v + \frac{dh}{dt}(p_i))\frac{dh}{dy}(p_i) - \alpha\Delta v = 0$
+  \quad \quad $(I_x(p_i)u + I_y(p_i)v + I_t(p_i))I_y(p_i) - \alpha\Delta v = 0$
  
-  \quad \quad \quad Laplace operator：$\Delta = dxx + dyy$
+  \quad \quad \quad $\Delta$为Laplace operator
 
   \quad 带入$\Delta u = \bar{u} - u$
 
-  \quad \quad $(\frac{dh}{dx}(p_i)^2 + \alpha)u + \frac{dh}{dx}(p_i)\frac{dh}{dy}(p_i)v = \alpha \bar{u} - \frac{dh}{dx}(p_i))\frac{dh}{dt}(p_i)$
+  \quad \quad $(I_x(p_i)^2 + \alpha)u + I_x(p_i)I_y(p_i)v = \alpha \bar{u} - I_x(p_i))I_t(p_i)$
   
-  \quad \quad $(\frac{dh}{dy}(p_i)^2 + \alpha)v + \frac{dh}{dx}(p_i)\frac{dh}{dy}(p_i)u = \alpha \bar{v} - \frac{dh}{dy}(p_i))\frac{dh}{dt}(p_i)$
+  \quad \quad $(I_y(p_i)^2 + \alpha)v + I_x(p_i)I_y(p_i)u = \alpha \bar{v} - I_y(p_i))I_t(p_i)$
 
   \quad 得到$u, v$关于$\bar{u}, \bar{v}$的公式
 
