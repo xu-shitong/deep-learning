@@ -121,7 +121,11 @@
 
   \quad $f, g$取离散值时，$(f * g)(x) = \sum_\tau f(\tau)g(x - \tau)$
 
-  卷积有交换律：$f * (g * h) = (f * g) * h$，结合律：$f * (g + h) = (f * g) + (f * h)$
+  \quad $f(m), g(m)$都为标量。$f(x)g(x - \tau)$意为\textbf{将卷积核左移n后和$f(x)$按元素相乘求和}
+
+  交换律：$f * (g * h) = (f * g) * h$
+  
+  结合律：$f * (g + h) = (f * g) + (f * h)$
 
   求导：$\frac{d }{dx}(f * g) = \frac{d f}{dx} * g = f * \frac{dg}{dx}$
   
@@ -675,7 +679,7 @@
 
   \quad 即对每一样本，T时长里每一次预测的Softmax Caragorical交叉熵损失值求和，取exp
   
-  求多迭代总困惑度，交叉熵按时长T加权求和后取exp值\\
+  求多迭代总困惑度：交叉熵按时长T加权求和后取exp值\\
 \textbf{强制学习 teaching forcing}：对自然语言人工智能通用
 
   当预测第$i$时间步$y_i$时使$y_{i-1}$为样本实际上一label，而不是上一次预测的计算结果$\hat{y}_{i-1}$\\
@@ -1922,7 +1926,14 @@
 % |                         图像处理 (CV 课程笔记)                           |
 % --------------------------------------------------------------------------
 \section{图像处理 (CV 课程笔记)}
-\noindent 聚焦公式：
+\noindent CMOS：RGB sensor
+
+  Bayer filter：将输入光过滤为仅有R/G/B强度的光线，每一像素被分配为R/G/B中一种颜色
+
+  \quad 在(2, 2)形状区域内对角线为R像素，剩余2像素分别为RB
+
+  \textbf{令一像素被分配颜色A，显示时一RGB除A外的颜色值取相邻像素的平均值}\\
+聚焦公式：
 
   令f为凸透镜焦距，u为物距，v为相距。则$\frac{1}{f} = \frac{1}{u} + \frac{1}{v}$\\
 quantisation：相机得到颜色值为连续值，存储时为离散值。连续值转离散值称quantisation\\
@@ -1949,7 +1960,7 @@ image filter：
   \quad high-pass卷积核 = identity - high-frequency卷积核。即卷积核中心以外的值相等，为负。中心值 > 1
 
   median filter：对卷积核覆盖的像素取中位数输出\\
-linear time filter：当输入移动一offset时输出移动相同offset，并输出值不变\\
+linear time-invarient filter：当输入移动一offset时输出移动相同offset，并输出值不变\\
 edge detection
 
   离散值中求导：
@@ -2058,13 +2069,15 @@ Interest Point Detection
 
   \quad 定义$E(u, v) = \sum_{(x, y) \in W} w(x, y)[I(x + u, y + v) - I(x, y)]^2$
 
+  \quad \quad $I(x, y)$即(x, y)位置像素亮度
+
+  \quad \quad u, v为在水平/竖直方向的移动距离。$I(x + u, y + v)$可在W外
+
   \quad \quad $w(x, y)$为window function，
   
   \quad \quad \quad idle function：(x, y)在W内时为1，否则为0。
   
   \quad \quad \quad Gaussian function：不论(x, y)是否在W内，根据(x, y)距离W中心的距离取Gaussian分部值
-
-  \quad \quad $I(x, y)$即(x, y)位置的亮度
   
   \quad Taylor expansion：
 
@@ -2114,30 +2127,42 @@ Interest Point Detection
 
   scaling 后图像进行interest point detection：
 
+  \quad Theorem：对函数$f(x)$,$g(sx) = f(x)$，有$\frac{df(x)}{dx} = s\frac{dg(sx)}{dx}$
+
   \quad $M = \sum_{(x, y) \in W}w(x, y)\sigma^2
     \begin{bmatrix}
       I_x(x, y, \sigma)^2 & I_x(x, y, \sigma)I_y(x, y, \sigma) \\
       I_x(x, y, \sigma)I_y(x, y, \sigma) & I_y(x, y, \sigma)^2
       \end{bmatrix}$
 
-  \quad \quad **其中$I_x(x, y, \sigma)$为**
+  \quad \quad 其中$I_x(x, y, \sigma)$为图像在(x, y)位置\ 放大$\sigma$\ 在水平方向的斜率
 
   Laplacian of Gaussian LoG：
 
-  \quad 一像素输出值为此像素的二阶导，即对亮度$I$使用Laplace operator $\Delta I$
+  \quad 在使用Gaussian filter后求二阶导
 
-  \quad \quad 即使用卷积核$
+  \quad \quad 求二阶导即对亮度$I$使用Laplace operator $\Delta I$，或使用卷积核$
     \begin{bmatrix}
       0 & 1 & 0 \\
       1 & -4 & 1 \\
       0 & 1 & 0
       \end{bmatrix}$
 
-  \quad LoG为在使用Gaussian filter后求二阶导
+  \quad 合并Gaussian filter和求导操作：$\Delta (f * g) = f * \Delta g$，
+  
+  \quad \quad $f$为输入图像，$g$为二维Gaussian 卷积函数
+
+  \quad \quad $ = f * (-\frac{1}{\pi\sigma^4}(1 - \frac{x^2 + y^2}{2\sigma^2})e^{-\frac{x^2 + y^2}{2\sigma^2}})$
+
+  \quad **$LoG_{norm}(x, y, \sigma) = \sigma^2(I_{xx}(x, y, \sigma) + I_{yy}(x, y, \sigma))$**
 
   Difference of Gaussian DoG
   
-  \quad $DoG(x, y, \sigma) = I * G(k\sigma) - I * G(\sigma)$\\
+  \quad $DoG(x, y, \sigma) = I * g(k\sigma) - I * G(\sigma)$
+  
+  \quad \quad $g(\sigma)$为使用$\sigma$的二维Gaussian卷积函数
+  
+  \quad **$DoG(x, y, \sigma) \approx (k - 1)\sigma^2\bigtriangledown^2G(x, y, \sigma)$**\\
 Feature Description
 
   根据descriptor将不同图像上的像素对应
@@ -2151,6 +2176,8 @@ Feature Description
   \quad histogram：收集一区域以内的像素intensity 分部，相同分部的区域对应
 
   Scale-invariant Feature Transform SIFT
+
+  \quad 目标：将图像转换为interest point，每一点有feature vector
 
   \quad 计算N个Gaussian filter结果，其中$\sigma$值取$\sqrt{2}, 2, 2\sqrt{2}, 4,...$
 
