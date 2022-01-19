@@ -123,7 +123,25 @@
 
   卷积有交换律：$f * (g * h) = (f * g) * h$，结合律：$f * (g + h) = (f * g) + (f * h)$
 
-  求导：$\frac{d }{dx}(f * g) = \frac{d f}{dx} * g = f * \frac{dg}{dx}$\\
+  求导：$\frac{d }{dx}(f * g) = \frac{d f}{dx} * g = f * \frac{dg}{dx}$
+  
+  性质：
+
+  \quad Commutativity：$f * g = g * f$
+  
+  \quad Associativity：$f * (g * h) = (f * g) * h$，$a(f * g) = (af) * g$
+  
+  \quad Distributivity：$f * (g + h) = (f * g) + (f * h)$\\
+\textbf{shift invarient}
+
+  对于一操作$f$，$f(x) = f(x + \epsilon)$称shift invarient。即当输入图片目标移动\ 仍能输出正确分类
+  
+  如：全连接层，最大池化层。不论目标位置，输出标签/张量值相同\\
+\textbf{shift equivalent}
+
+  输出应随输入目标移动而移动
+
+  如：卷积层。目标移动后输出矩阵值改变\\
 \textbf{Cosine distance}
 
   $d(x, y) = \frac{x \cdot y}{\|x\|\|y\|}$
