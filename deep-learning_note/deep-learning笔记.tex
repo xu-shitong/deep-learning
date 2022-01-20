@@ -544,26 +544,31 @@
 \section{CNN优化方法}
 \noindent \textbf{批量归一化 batch normalization}
 
+  有拉伸$\gamma$, 偏移$\beta$参数参与反向传播，初始化$\gamma = \vec{1}, \beta = \vec{0}$
+
+  批量归一化层有可变$\mu', \sigma^{2'}$用于预测时进行批量归一。每一迭代由动量$\eta$更新
+  
+  \quad 初始化$\mu' = \vec{0}, \sigma^{2'} = \vec{1}$
+
+  \quad 训练时$\mu, \sigma^2$直接由输入$x$求得，每一迭代更新$\mu' = \eta\mu' + (1 - \eta)\mu$，$\sigma^{2'} = \eta\sigma^2 + (1 - \eta)\sigma^{2'}$
+
   \textbf{1. 对全连接层做批量归一}
 
   \quad 处于\ 输入的仿射变换\ 和\ 激活函数间，即\ 输出 = $\phi (BN(x))$ $BN$为批量归一计算
 
   \quad 1. 对于批量仿射 $x = Wu + b$，求标准化$\hat{x}_i = \frac{{x_i} - \mu}{\sqrt{\sigma^2 + \varepsilon }}$。$\mu $和 $\sigma$都为此组仿射变换的结果
 
-  \quad 2. $BN(x) = \gamma * \hat{x}_i + \beta $，$\gamma$拉伸 $\beta$偏移。* + 为按元素加法 乘法
+  \quad 2. $BN(x) = \gamma * \hat{x} + \beta $，$\gamma$拉伸 $\beta$偏移。* + 为按元素加法 乘法
 
   \textbf{2. 对卷积层做批量归一}
 
   \quad 处于\ 卷积计算\ 和\ 激活函数\ 间，卷积计算 + 批量归一 + 激活函数 + 池化层
 
-  \quad 各通道独立计算，各有独立拉伸$\gamma$ 偏移$\beta$。
+  \quad 各通道独立计算，各有独立拉伸$\gamma$ 偏移$\beta$值。
   
-  \quad $\sigma$, $\mu$为此通道\ 一批量内\ 所有通道\ 的所有元素\ 的总体方差，平均值
+  \quad $\sigma^2$, $\mu$为此通道\ 一批量内\ 所有通道\ 的所有元素\ 的总体方差，平均值
 
-  \quad 得到$\sigma$, $\mu$后对此通道此批量内所有元素求标准化
-
-  \quad 最终对此通道\ 
-  \ 偏移\\
+  \quad 得到$\sigma^2$, $\mu$后对此通道此批量内所有元素求标准化\\
 \textbf{ResNet残差网络}
 
   \textbf{残差块}
@@ -1937,6 +1942,14 @@
 
   令f为凸透镜焦距，u为物距，v为相距。则$\frac{1}{f} = \frac{1}{u} + \frac{1}{v}$\\
 quantisation：相机得到颜色值为连续值，存储时为离散值。连续值转离散值称quantisation\\
+RBGA：
+
+  RGB + alpha channel 代表透明度\\
+Subtractive colour space CMYK
+
+  由白色开始，减去RGB得到颜色
+
+  包含Magenta，Cyan，Yellow。用于打印\\
 image filter：
 
   卷积操作，步幅1\ 填充(卷积核边长 / 2)。
@@ -1955,9 +1968,13 @@ image filter：
 
   \quad identity卷积核：仅有中心值为1，其余值都为0
 
-  \quad high-frequency部分：identity卷积核 - average filter
+  \quad high-frequency部分：
+  
+  \quad \quad identity卷积核 - average filter
 
-  \quad high-pass卷积核 = identity - high-frequency卷积核。即卷积核中心以外的值相等，为负。中心值 > 1
+  \quad \quad 或\ 卷积核中心为1，其余$kernel\_size^2 - 1$位置值为$\frac{1}{kernel\_size^2 - 1}$
+
+  \quad high-pass卷积核 = identity + high-frequency卷积核。即卷积核中心以外的值相等，为负。中心值 > 1
 
   median filter：对卷积核覆盖的像素取中位数输出\\
 linear time-invarient filter：当输入移动一offset时输出移动相同offset，并输出值不变\\
