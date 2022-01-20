@@ -2179,23 +2179,39 @@ Feature Description
 
   \quad 目标：将图像转换为interest point，每一点有feature vector
 
-  \quad 计算N个Gaussian filter结果，其中$\sigma$值取$\sqrt{2}, 2, 2\sqrt{2}, 4,...$
+  \quad 计算N个Gaussian filter结果，其中$k\sigma$值取$\sigma, \sqrt{2}\sigma, 2\sigma, 2\sqrt{2}\sigma, 4\sigma,...$
 
   \quad 相邻Gaussian filter间计算差值，得到N-1个DoG结果
 
-  \quad key point assignment：**得到最优的$v = (x, y, \sigma)$使得$DoG(v)$最大化
+  \quad key point assignment：
+  
+  \quad \quad 假设key point周围像素值以二次函数分部，得到最优的key point$v = (x, y, \sigma)$使得$DoG(v)$值
 
   \quad \quad 通过Taylor 展开：$DoG(v + \delta) = DoG(v) + \frac{dDoG^T}{dv}\delta + \frac{1}{2}\delta^T\frac{d^2DoG}{dv^2}\delta$
 
-  \quad \quad \quad 则$\frac{dDoG(v + \delta)}{d\delta} = \frac{dDoG}{dv} + \frac{d^2DoG}{dv^2}$
+  \quad \quad \quad 估计一阶导值$\frac{DoG(x)}{dx} = \frac{DoG(x + 1, y, \sigma) + DoG(x - 1, y, \sigma)}{2}$
 
-  \quad \quad \quad 取$\frac{dDoG(v + \delta)}{d\delta} = 0$，则$\delta = -\frac{d^2DoG}{dv^2}^{-1}\frac{dDoG}{v}$。$DoG(v + \delta)$有最值
+  \quad \quad \quad 二阶导值使用一阶导差值
+
+  \quad \quad 则$\frac{dDoG(v + \delta)}{d\delta} = \frac{dDoG}{dv} + \frac{d^2DoG}{dv^2}\delta$
+
+  \quad \quad 取$\frac{dDoG(v + \delta)}{d\delta} = 0$，则$\delta = -\frac{d^2DoG}{dv^2}^{-1}\frac{dDoG}{v}$。$DoG(v + \delta)$有最值
+
+  \quad \quad **则$v + \delta$为key point，并有refined scale**
 
   \quad orientation assignment：
 
   \quad \quad 在keypoint周围采样像素，窗口大小$\propto \sigma$
 
-  \quad \quad 将采样的像素分入网格：每一网格内将方向分为8区间，采样的方向在8区域的分部
+  \quad \quad 将360度角度分为36 bin，每一bin占10度。采集像素的角度被分入36个bin中，斜率总和最大的bin作为此key point的角度
+
+  \quad key point descriptor：
+  
+  \quad \quad 将图像分为网格，每一网格内将方向分为8 bin，每一bin为一方向的斜率总和
+
+  \quad \quad \quad **和orientation assignment区别**
+
+  \quad \quad descriptor为将每一grid的8 bin连接
 
   \quad keypoint matching
 
@@ -2238,13 +2254,28 @@ Feature Description
       \end{bmatrix}$
 
   \quad \quad \quad 简写为Am = b
+
   \quad \quad \quad 求解$m = (A^TA)^{-1}A^Tb$
+
+  Random Sample Consensus RANSAC：
+
+  \quad 目标：对一组数据找到线性函数关系
+
+  \quad 1. 任取两点，得到两点定义的线性函数$f(x)$
+
+  \quad 2. 计算满足$f(x') - \epsilon \leq y' \leq f(x') + \epsilon$的样本$(x', y')$个数
+
+  \quad 3. 当满足的样本个数到达threshould则停止，否则重复1.取点
+
+  \quad **应用在key point match**
   
   Speeded-Up Robust Feature SRUF：feature descriptor
 
-  \quad Haar wavelets：每一采样仅在水平/竖直方向取斜率$d_h, d_v$，斜率使用1/-1表示。(而非使用8方向的斜率求和)
+  \quad Haar wavelets：包含2 * (2, )向量，分别为$d_h = [-1, 1], d_v = [-1, 1]^T$。 **形状为(2, 2)或(4, 4)，元素为1/-1的矩阵**N
+  
+  \quad 每一采样将像素和Haar wavelets按元素相乘求和，得到仅在水平/竖直方向取斜率$d_h, d_v$，
 
-  \quad descriptor：$(\sum d_x, \sum d_y, \sum |d_x|, \sum |d_y|)$
+  \quad descriptor：$(\sum d_h, \sum d_v, \sum |d_h|, \sum |d_v|)$
 
   Binary Robust Independent Elementary Feature BRIEF：
 
@@ -2257,10 +2288,15 @@ Feature Description
 
   \quad 在一像素周围取$n_d$对像素$(p_i, q_i)$，descriptor为$\sum_{i \leq n_d} \tau(p_i, q_i) << i$
 
-  \quad descriptor间距离为两descriptor XOR值\\
-Histogram of Oriented Gradient HOG 
+  \quad \quad 不同**key point**共用同一随机\ 像素对\ 分部
 
-  对一区域的像素计算feature：
+  \quad descriptor间距离为两descriptor XOR值
+
+  \quad \textbf{假设图像仅有移动，不支持旋转，缩放后scale match}
+  
+  Histogram of Oriented Gradient HOG 
+
+  \quad 对一区域的像素计算feature
 
   \quad 将图像整体分为网格(非在某一像素周围分网格)，每一grid计算gradient orientation histogram向量$v$
 
