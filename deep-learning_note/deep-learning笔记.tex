@@ -157,7 +157,7 @@
 
   Theorem：u为一S的stationary point
   
-  \quad iff $\frac{L(t, u(t), u'(t))}{du} - \frac{L(t, u(t), u'(t))}{d(u'(t))dt}$
+  \quad iff $\frac{L(t, u(t), u'(t))}{du} - \frac{L(t, u(t), u'(t))}{d(u'(t))dt} = 0$
 
 % --------------------------------------------------------------------------
 % |                           perceptron 分类算法                           |
@@ -1962,7 +1962,7 @@ image filter：
 
   \quad \quad $ = h_x(i) h_y(j)$
 
-  \quad \quad $h_x(i) = \frac{1}{2\pi\sigma^2}e^{-\frac{i^2}{2\sigma^2}}$，$h_y(j)$同理
+  \quad \quad $h_x(i) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{i^2}{2\sigma^2}}$，$h_y(j)$同理
   
   High-pass filter：
 
@@ -2336,9 +2336,11 @@ Optic Flow
 
   \quad 则对每一像素(x, y)都有$I_xu + I_yv + I_t = 0$
 
+  \quad \textbf{$I_x, I_y$仍为一图片中亮度斜率，由于取关于x, y偏导。$I_t$为固定位置亮度斜率}
+
   Lucas-Kanade Method：计算(u, v)
 
-  \quad 对每一像素$p_i$：$[I_x(p_i), I_y(p_i)][u, v]^T = [-I_t(p_i)]$
+  \quad 对每一像素$p_i$：$[I_x(p_i), I_y(p_i)][u, v]^T = -I_t(p_i)$
 
   \quad 令
     $A = 
@@ -2348,15 +2350,15 @@ Optic Flow
       ...
       \end{bmatrix}$, 
     $x = [u, v]^T$,
-    $b = 
+    $b = -
     \begin{bmatrix}
       I_t(p_1) \\ 
       I_t(p_2) \\ 
       ...
       \end{bmatrix}$
-    则Ax = -b
+    则Ax = b
 
-  \quad 取$x = argmin_x\|Ax + b\|$为最优$[u, v]^T$
+  \quad 取$x = argmin_x\|Ax - b\|^2$为最优$[u, v]^T$
 
   \quad 则有$x = (A^TA)^{-1}A^Tb$
 
@@ -2371,6 +2373,18 @@ Optic Flow
       I_x(p_i)I_t(p_i) \\ 
       I_y(p_i)I_t(p_i)
       \end{bmatrix}$
+
+  % \quad **sampling方法，算法目标，l标记**
+
+  % \quad 1. 从上一sampling 层**$l - 1$**中计算此层(u, v)：$u^l = 2u^{l-1}, v^l = 2v^{l-1}$
+
+  % \quad 2. 计算warped image：$I^l_{warped} = I^l(x + u, y + v, t+1)$
+
+  % \quad 3. 计算$I_t = I^l_{warped}(x + u^{l-1}, y + v^{l-1}, t+1) - I^l(x, y)$。$I_x, I_y$由$I_l$计算得
+
+  % \quad 4. 计算incremental flow：$[u^{\delta}, v^{\delta}]^T = (A^TA)^{-1}A^Tb$
+
+  % \quad 5. 更新$u^l = u^{l-1} + u^{\delta}, v^l = v^{l-1} + v^{\delta}$
 
   Horn-Schunck method：每一像素有(u, v)
 
@@ -2396,7 +2410,7 @@ Optic Flow
 
   Lucas-Kanade Tracker
 
-  \quad 针对原图像I，J
+  \quad 针对原图像I，移动后图像J
 
   \quad 取(u, v)，使得将图像I按(u, v)方向移动后和J像素平方差之和最小
 
@@ -2449,7 +2463,7 @@ Optic Flow
       \end{bmatrix}$\\
 Camera Model 
 
-  由2d图像预测观测点位置
+  已知物体函数表达式和2d图像，预测观测点位置
 
   令$X = 
     \begin{bmatrix}
