@@ -325,6 +325,66 @@
 
 
 % --------------------------------------------------------------------------
+% |               restricted Boltzman machine 受限玻尔兹曼机                 |
+% --------------------------------------------------------------------------
+\section{restricted Boltzman machine RBM 受限玻尔兹曼机}
+\noindent 组成
+
+  单层可见全连接层：有可见层向量$v$，元素数 = 节点数$N_v$
+  
+  单层隐藏全连接层：有隐藏层向量$h$，元素数 = 节点数$N_h$
+
+  定义可能性$P(v, h) = \frac{exp(-E(v, h))}{\sum_{v, h}exp(-E(v, h))}$
+
+  \quad $ = \frac{exp(-E(v, h))}{Z}$ 令$Z = \sum_{v, h}exp(-E(v, h))$
+  
+  bernoulli - bernoulli RBM：$v, h$每一元素$\in \{0, 1\}$
+
+  \quad 能量值$E(v, h) = -a^Tv - b^Th - h^TWv$
+
+  \quad \quad $W \in \mathbb{R}^{N_h \times N_v}$为隐藏层权重
+
+  \quad \quad $a, b$分别为两层bias
+
+  \quad Theorem 1：$P(h | v) = \prod_i \frac{\exp(b_ih_i + h_iW_{i}v)}{\sum_{h_i}\exp(b_ih_i + h_iW_iv)}$
+  
+  \quad \quad $ = \prod_i P(h_i | v)$
+
+  \quad \quad $W_i$为$W$第i行向量，即隐藏层第i节点参数
+
+  \quad \quad 隐藏层间没有连接，则可分别计算每一$P(h_i | v)$后相乘
+
+  \quad Theorem 2：$P(h_i = 1 | v) = \frac{\exp(b_i + W_{i}v)}{\exp(b_i * 0 + 0 * W_iv) + \exp(b_i * 1 + 1 * W_iv)}$
+
+  \quad \quad $ = \sigma(b_i + W_{i}v)$，$\sigma$即激活函数sigma
+
+  \quad \quad 可得$P(h = \vec{1} | v) = \sigma(Wv + b)$
+
+  \quad 同theorem 2，$P(v = \vec{1} | h) = \sigma(W^Th + a)$
+
+  Gaussian - bernoulli RBM：$v \in \mathbb{R}^{N_v}$, $h \in \{0, 1\}^{N_h}$
+
+  \quad $E(v, h) = \frac{(v - a)^T(v - a)}{2} - b^Th - h^TWv$
+
+  \quad Theorem：$P(v | h)$为$v \sim \mathcal{N}(W^Th + a, I)$的pdf
+
+  \quad \quad $I$为covariance matrix，为identity matrix\\
+性质：
+
+  free energy $F(v) = -log(\sum_h \exp(-E(v, h)))$
+
+  \quad 则$P(v) = \sum_h P(h, v)$
+
+  \quad \quad $ = \sum_h \frac{\exp(-E(v, h))}{\sum_{v, h} \exp(-E(v, h))}$
+
+  \quad \quad $ = \frac{\sum_h\exp(-E(v, h))}{\sum_{v, h} \exp(-E(v, h))}$
+
+  \quad \quad $ = \frac{\exp(-F(v))}{\sum_v \exp(-F(v))}$
+
+  当RBM不包含隐藏层时
+
+
+% --------------------------------------------------------------------------
 % |                convolutional neural network卷积神经网络                  |
 % --------------------------------------------------------------------------
 
@@ -1977,7 +2037,8 @@ image filter：
   \quad high-pass卷积核 = identity + high-frequency卷积核。即卷积核中心以外的值相等，为负。中心值 > 1
 
   median filter：对卷积核覆盖的像素取中位数输出\\
-linear time-invarient filter：当输入移动一offset时输出移动相同offset，并输出值不变\\
+time-invarient filter：当输入移动一offset时输出移动相同offset，并输出值不变\\
+linear filter：
 edge detection
 
   离散值中求导：
