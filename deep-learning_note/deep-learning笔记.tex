@@ -121,21 +121,23 @@
 
   \quad $f, g$取离散值时，$(f * g)(x) = \sum_\tau f(\tau)g(x - \tau)$
 
-  \quad $f(m), g(m)$都为标量。$f(x)g(x - \tau)$意为\textbf{将卷积核左移n后和$f(x)$按元素相乘求和}
+  \quad $f(m), g(m)$都为标量。$f(x)g(x - \tau)$意为\textbf{将卷积核左移n后和$f(x)$按元素相乘求和，求和结果为输出中x位置的值}
 
-  交换律：$f * (g * h) = (f * g) * h$
-  
-  结合律：$f * (g + h) = (f * g) + (f * h)$
-
-  求导：$\frac{d }{dx}(f * g) = \frac{d f}{dx} * g = f * \frac{dg}{dx}$
-  
   性质：
 
   \quad Commutativity：$f * g = g * f$
   
   \quad Associativity：$f * (g * h) = (f * g) * h$，$a(f * g) = (af) * g$
   
-  \quad Distributivity：$f * (g + h) = (f * g) + (f * h)$\\
+  \quad Distributivity：$f * (g + h) = (f * g) + (f * h)$
+  
+  \quad 求导：$\frac{d }{dx}(f * g) = \frac{d f}{dx} * g = f * \frac{dg}{dx}$
+  
+  \quad $\int_{\mathbb{R}^n} f(\tau)g(x - \tau) \,d\tau = \int_{\mathbb{R}^n} f(x - \tau)g(\tau) \,d\tau$由交换律
+  
+  \quad \quad $ = \int_{\mathbb{R}^n} f(x + \tau)g(-\tau) \,d\tau$
+  
+  \quad \quad 即计算时先将卷积核倒序，\\
 \textbf{shift invarient}
 
   对于一操作$f$，$f(x) = f(x + \epsilon)$称shift invarient。即当输入图片目标移动\ 仍能输出正确分类
@@ -330,9 +332,9 @@
 \section{restricted Boltzman machine RBM 受限玻尔兹曼机}
 \noindent 组成
 
-  单层可见全连接层：有可见层向量$v$，元素数 = 节点数$N_v$
+  单层可见全连接层：有可见层向量$v$，元素数 = 节点数$N_v$。\textbf{对应输入数据}
   
-  单层隐藏全连接层：有隐藏层向量$h$，元素数 = 节点数$N_h$
+  单层隐藏全连接层：有隐藏层向量$h$，元素数 = 节点数$N_h$。\textbf{简化输入数据的特征，$N_h < N_v$}
 
   定义可能性$P(v, h) = \frac{exp(-E(v, h))}{\sum_{v, h}exp(-E(v, h))}$
 
@@ -375,14 +377,37 @@
 
   \quad 则$P(v) = \sum_h P(h, v)$
 
-  \quad \quad $ = \sum_h \frac{\exp(-E(v, h))}{\sum_{v, h} \exp(-E(v, h))}$
+  \quad \quad $ = \sum_h \frac{\exp(-E(v, h))}{Z}$
 
-  \quad \quad $ = \frac{\sum_h\exp(-E(v, h))}{\sum_{v, h} \exp(-E(v, h))}$
+  \quad \quad $ = \frac{\sum_h\exp(-E(v, h))}{Z}$
 
   \quad \quad $ = \frac{\exp(-F(v))}{\sum_v \exp(-F(v))}$
 
-  当RBM不包含隐藏层时
+  当RBM不包含隐藏层时$p_n(v) = \frac{\sum_h \exp(-E_n(v, h))}{Z_n}$，n为可见层节点数
 
+  \quad $ = \frac{\prod_{i=1}^{n} \sum_{h_i} \exp(b_ih_i + h_iW_iv)}{Z_n}$
+
+  \quad $ = \frac{\prod_{i=1}^{n - 1} \sum_{h_i} \exp(b_ih_i + h_iW_iv)(1 + \exp(b_n + W_nv))}{Z_n}$
+
+  \quad $ = p_{n-1}(v)\frac{Z_{n-1}}{Z_n}(1 + \exp(b_n + W_nv))$\\
+代价函数$J(v) = -\log(P(v)) = F(v) + \log(\sum_v\exp(-F(v)))$\\
+训练： 
+
+  一次迭代中，输入样本为可见层向量$v_0$，根据pdf$P(h | v_o)$取$h_0$
+
+  \quad 1. 由$h_t$，根据pdf$P(v_{t+1} | h_t)$产生$v_{t+1}$
+
+  \quad 2. 由$v_{t+1}$，根据pdf$P(h_{t+1} | v_{t+1})$产生$h_{t+1}$
+
+  \quad 3. 重复1.2.得到$h_T, v_T$
+
+  \quad 使用近似学习，则求导为
+  
+  \quad \quad $\frac{dJ}{dW} = [h_Tv_T^T - h_0v_0^T]$
+
+  \quad \quad $\frac{dJ}{da} = [v_T - v_0]$
+
+  \quad \quad $\frac{dJ}{db} = [h_T - h_0]$
 
 % --------------------------------------------------------------------------
 % |                convolutional neural network卷积神经网络                  |
@@ -2037,8 +2062,13 @@ image filter：
   \quad high-pass卷积核 = identity + high-frequency卷积核。即卷积核中心以外的值相等，为负。中心值 > 1
 
   median filter：对卷积核覆盖的像素取中位数输出\\
+impulse response：当输入为一impulse，filter输出称impulse response 
+
+  impulse函数$\delta(x)$定义为$\int_x \delta(x) \,dx = 1$，并仅有唯一x使$\delta(x) \neq 0$\\
 time-invarient filter：当输入移动一offset时输出移动相同offset，并输出值不变\\
 linear filter：
+
+  令filter输出为h，输入为f(x)，linear filter满足$h(\alpha f(x_1) + \beta f(x_2)) = \alpha g(x_1) + \beta g(x_2)$\\
 edge detection
 
   离散值中求导：
@@ -2050,6 +2080,8 @@ edge detection
   \quad central difference：$f'(x) = \frac{f(x + 1) - f(x - 1)}{2}$
 
   卷积核中求导：forward：$[1, -1, 0]$，backward：$[[0, 1, -1]]$，central：$[1, 0, -1]$
+
+  \quad \textbf{此卷积核为h函数定义，在矩阵上卷积时先取对称向量}
 
   Prewitt filter：
 
@@ -2076,6 +2108,8 @@ edge detection
       0 & 0 & 0 \\
       -1 & -2 & -1
       \end{bmatrix}$
+
+  Prewitt, Sobel filter 不同行作用为smoothing。从图片多行中取值，减少斜率受紧邻的同行像素极值影响
 
   \textbf{Prewitt filter, Sobel filter 2卷积核分别计算图像在水平/竖直方向的斜率}
 
