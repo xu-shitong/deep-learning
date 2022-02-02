@@ -137,13 +137,13 @@
   
   \quad \quad $ = \int_{\mathbb{R}^n} f(x + \tau)g(-\tau) \,d\tau$
   
-  \quad \quad 即计算时先将卷积核倒序，\\
+  \quad \quad 即计算时先将卷积核倒序\\
 \textbf{shift invarient}
 
   对于一操作$f$，$f(x) = f(x + \epsilon)$称shift invarient。即当输入图片目标移动\ 仍能输出正确分类
   
   如：全连接层，最大池化层。不论目标位置，输出标签/张量值相同\\
-\textbf{shift equivalent}
+\textbf{shift equivariance}
 
   输出应随输入目标移动而移动
 
@@ -637,6 +637,8 @@
 
   \quad 训练时$\mu, \sigma^2$直接由输入$x$求得，每一迭代更新$\mu' = \eta\mu' + (1 - \eta)\mu$，$\sigma^{2'} = \eta\sigma^2 + (1 - \eta)\sigma^{2'}$
 
+  \quad \textbf{variance计算使用所有同一通道内的参数总体平均值，不可使用torch.var}
+
   \textbf{1. 对全连接层做批量归一}
 
   \quad 处于\ 输入的仿射变换\ 和\ 激活函数间，即\ 输出 = $\phi (BN(x))$ $BN$为批量归一计算
@@ -651,7 +653,7 @@
 
   \quad 各通道独立计算，各有独立拉伸$\gamma$ 偏移$\beta$值。
   
-  \quad $\sigma^2$, $\mu$为此通道\ 一批量内\ 所有通道\ 的所有元素\ 的总体方差，平均值
+  \quad $\sigma^2$, $\mu$为此通道\ 所有批量内\ 所有通道\ 的所有元素\ 的总体方差，平均值
 
   \quad 得到$\sigma^2$, $\mu$后对此通道此批量内所有元素求标准化\\
 \textbf{ResNet残差网络}
@@ -2121,7 +2123,7 @@ edge detection
 
   Canny edge detection：
 
-  \quad 使边界输出1，非边界为0
+  \quad 使边界输出1，非边界为0。边界仅用一像素表示
 
   \quad 1. 使用Gaussian filter减少noise
 
@@ -2139,9 +2141,11 @@ edge detection
 
   \quad 4. 边界权重在high threshould以上的像素有像素值1，在low high threshould间的像素有值0.5。否则像素值为0
 
-  \quad 5. 对所有值为0.5的像素，若临近8像素有值为1像素，则此像素值调为1
+  \quad 5. Hysteresis threshoulding：将0.5权重的像素设为0或1
+  
+  \quad \quad 将对所有值为0.5的像素，若临近8像素有值为1像素，则此像素值调为1
 
-  \quad \quad 可根据更新后的临近像素值判断是否调整0.5为1\\
+  \quad \quad 迭代将0.5权重设为1。直至没有额外像素值可改变\\
 Hough transformation：
 
   将边界检测图像结果转换为边界的函数表达式，允许有多个边界表达式
