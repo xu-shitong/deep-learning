@@ -1376,11 +1376,28 @@
 % |                             自然语言识别                                 |
 % --------------------------------------------------------------------------
 \section{自然语言识别}
-\noindent \textbf{一. 词嵌入}
+\noindent 词编码
+
+  bag of word BOW：矩阵，每列对应一词，每行对应一句话，每一元素对应词是否出现在句中
+
+  \quad 矩阵稀疏
+
+  map to concept：将词和实际语义对应，如WordNet。
+
+  \quad 无法处理一词多意问题
+
+  Feature extraction：词嵌入\\
+\textbf{一. 词嵌入}
 
   词赋予两个向量$v_o, v_c$，分别为将词作为中心词和作为背景词使用的词向量
   
   \quad 词间夹角$\frac{u_o^Tv_c}{||u_o||\space||v_c||} \in [-1, 1]$为词的相似度
+
+  创建方法：
+
+  \quad Count-based：co-occurrence matrix 
+
+  \quad Prediction-based：word2vec，GLOVE，BERT
 
   定义：
 
@@ -1403,9 +1420,26 @@
   给定中心词$w_c$，有单个背景词$w_o$的概率$P(w_o | w_c) = \frac{exp(u_o^Tv_c)}{\sum_{i\in\mathcal{V} } exp(u_i^Tv_c)}$
   
   \quad $ log(P(w_o | w_c)) = u_o^Tv_c - log(\sum_{i\in\mathcal{V} } exp(u_i^Tv_c))$\\
+\textbf{co-occurence matrix}
+
+  矩阵行列数同词个数$\|\mathcal{V}\|$
+  
+  \quad 每一元素(x, y)标记是否存在一句话同时包含词x\ y
+
+  \quad 或记录同时包含词x y的句子个数
+  
+  矩阵为symmetric matrix，词向量即矩阵中词所在的行(列)
+  
+  TF-IDF(w, d)：词w在词序d中的权重，避免常用词和其余词相似度过高
+  
+  \quad $TF-IDF(w, d) = TF(w, d) \times IDF(w, d)$
+  
+  \quad \quad $TF(w, d)$：词w在词序d中出现的次数
+  
+  \quad \quad $IDF(w, d) = \log(\frac{总词序个数}{包含词w的词序个数})$\\
 \textbf{跳字模型}：
   
-  基于一个\textbf{中心词}生成才其周围的多个\textbf{背景词}
+  基于一个\textbf{中心词}生成其周围的多个\textbf{背景词}
 
   \textbf{似然函数}：代表一段词序发生的可能性
 
@@ -1582,6 +1616,9 @@
   \quad 使用Sigmoid二元交叉熵函数，传入前向传播结果$P$，label$L$代表样本是否为正样本，掩码$M$代表样本是否有效
 
   \quad 目标为使预测结果$P$每一有效位置和$L$对应位置相同\\
+\textbf{Feed-forward Language Model FFLM}
+
+  为一种n元语法，得到前n个词，将每一词转为词向量相连。连接后向量经过全连接层得到输出\\
 \textbf{fastText子词嵌入}：基于word2vec优化
 
   产生子词：在单词首尾添加\texttt{< >}，取所有长度为$s$的子字符串 + 单词本身
@@ -1721,34 +1758,36 @@
 
   \quad \quad $y_{i-1}$对$y_i$的取值造成影响，若最优解$y_i$位置的词非第$i$时间步的$argmax$则贪婪算法无法取到最优解
 
-  \textbf{beam search 束搜索}
+  \quad \textbf{beam search 束搜索}
   
-  \quad 定义：beam size束宽$k$
+  \quad \quad 定义：beam size束宽$k$
 
-  \quad 计算：
+  \quad \quad 计算：
   
-  \quad \quad 1.时间步$i = 1$，选取条件概率最大$k$个值，做$k$个可选序列的首词
+  \quad \quad \quad 1.时间步$i = 1$，选取条件概率最大$k$个值，做$k$个可选序列的首词
   
-  \quad \quad 2.时间步$i = 2,3...,L$，对每一可选输出序列考虑整个$\mathcal{Y} $，将$k*\mathcal{Y} $个新时间序列看做一整体，选出$P$值最高的$k$个作为此序列的下一词。最终每一时间步的输出序列都作为可选序列进入第三步，共$L*K$个时间序列。
+  \quad \quad \quad 2.时间步$i = 2,3...,L$，对每一可选输出序列考虑整个$\mathcal{Y} $，将$k*\mathcal{Y} $个新时间序列看做一整体，选出$P$值最高的$k$个作为此序列的下一词。最终每一时间步的输出序列都作为可选序列进入第三步，共$L*K$个时间序列。
   
-  \quad \quad \quad 即，永远保持$k$个序列，而一个时间序列可能添加不同的$\hat{y}$而在下一时间步预测中有多个分支。
+  \quad \quad \quad \quad 即，永远保持$k$个序列，而一个时间序列可能添加不同的$\hat{y}$而在下一时间步预测中有多个分支。
   
-  \quad \quad 3.将$L*k$个序列筛选，仅保留包含$<eol>$的词序，舍弃$<eol>$后的词
+  \quad \quad \quad 3.将$L*k$个序列筛选，仅保留包含$<eol>$的词序，舍弃$<eol>$后的词
   
-  \quad \quad 4.在3.的序列集合中选择值$\frac{1}{l^a}log(P(y_1, ...,l))=\frac{1}{l^a}\sum_{i=1}^llog(P(y_i|y_1, ..., y_{i-1}, c))$最大序列作为输出
+  \quad \quad \quad 4.在3.的序列集合中选择值$\frac{1}{l^a}log(P(y_1, ...,l))=\frac{1}{l^a}\sum_{i=1}^llog(P(y_i|y_1, ..., y_{i-1}, c))$最大序列作为输出
   
-  \quad \quad \quad $l$为每一序列长度，$a$为参数，常取0.75。$\frac{1}{l^a}$惩罚长度较大项\\
+  \quad \quad \quad \quad $l$为每一序列长度，$a$为参数，常取0.75。$\frac{1}{l^a}$惩罚长度较大项\\
 \textbf{注意力机制}
 
   编码器对每一时间步产生背景向量$c_i'$而非对整个词序产生唯一背景向量$c$
+
+  令$s_t$为解码器时间t的隐藏状态，$h_t$为编码器时间t的隐藏状态
 
   计算背景变量$c_{t'}$：
 
   \quad 计算每一编码器隐藏状态$h_t$的权重$\alpha_{t't} = \frac{exp(e_{t't})}{\sum_{t=1}^{T}exp(t't)}$，即对不同$t$的$e_{t't}$求softmax
 
-  \quad \quad $e_{t't}$同时基于编码器时间步$t$和解码器时间步$t'$，则可定义$e_{t't} = a(s_{t'-1}, h_t)$。
+  \quad \quad $e_{t't} = a(s_{t'-1}, h_t)$，同时基于编码器时间步$t$和解码器时间步$t'$
 
-  \quad \quad \quad a函数例：当$s_{t'-1}, h_t$长度相等，$a(s_{t'-1}, h_t) = s_{t'-1}^Th_t$
+  \quad \quad \quad a函数\textbf{代表编码器解码器隐藏状态相似度}。例：当$s_{t'-1}, h_t$长度相等，$a(s_{t'-1}, h_t) = s_{t'-1}^Th_t$
 
   \quad \quad \quad 注意力机制论文：$a(s_{t'-1}, h_t) = v^Ttanh(W_ss + W_hh)$，$v, W_s, W_h$为可学习参数
 
@@ -1762,7 +1801,22 @@
   
   \quad \quad 更新门$z_{t'} = \sigma(W_{yz}y_{t'-1} + W_{sz}s_{t'-1} + W_{cz}c_{t'} + b_z)$
 
-  \quad \quad 候选隐藏状态$\tilde{s}_{t'} = tanh(W_{ys}y_{t'-1} + W_{ss}(s_{t'-1} \odot r_{t'}) + W_{cs}c_{t'} + b_s)$
+  \quad \quad 候选隐藏状态$\tilde{s}_{t'} = tanh(W_{ys}y_{t'-1} + W_{ss}(s_{t'-1} \odot r_{t'}) + W_{cs}c_{t'} + b_s)$\\
+\textbf{三. NLP中CNN}
+
+  将每一词转为词向量，得到(词序长度, 词向量长度v)形状矩阵
+
+  一层卷积操作包含n通道，每个通道内卷积核个数m相同，形状$(h_c, v)$相同。所有卷积核宽同词向量长度，通道间卷积核高$h_c$可不同
+
+  一通道计算：
+
+  \quad 在第一维(高)方向上移动卷积核做卷积计算，一个卷积核的输出通过全局最大池化层
+
+  \quad 即所有通道输出形状为$(m, )$
+
+  将所有通道输出连接，得到一层卷积操作结果
+
+  即期望每一卷积核理解不同情感的词，全局池化层保证词在词序中spatial invarient
 
 % --------------------------------------------------------------------------
 % |                              推荐算法                                   |
@@ -2154,7 +2208,9 @@ Hough transformation：
 
   \quad \quad 求解：每一边界像素(p, q)对应$q = mp + b$对应一m-b函数表达式
 
-  \quad \quad \quad 对所有m-b函数，每一函数上点分配一权重。函数有交点时权重叠加
+  \quad \quad \quad 在parameter space m-b中，将m，b取值范围分为网格
+
+  \quad \quad \quad 对所有m-b函数，每一函数经过的grid分配一权重。多函数经过同一gird时权重叠加
   
   \quad \quad \quad 最终权重大于一threshould的(m, b)点为一边界。
 
@@ -2164,14 +2220,14 @@ Hough transformation：
 
   \quad \quad 求解：同slope intercept，函数为$\theta$-$\rho$
 
+  \quad \quad 相较slope intercept form取值范围有限，易于定义grid
+
   \quad 圆弧边界：
 
   \quad \quad 方法1：$(x - a)^2 + (y - b)^2 = r^2$
 
   \quad \quad 方法2：$x = a + r\cos(\theta), y = b + r\sin(\theta)$
   
-  \quad \quad \quad 限定$r \in [r_{min}, r_{max}]$
-
   \quad \quad \quad 对每一可能的r值求$a = x - r\cos(\theta)$, $b = y - r\sin(\theta)$，$\theta$取像素(x, y)位置的角度
 
   \quad \quad \quad 对(a, b, r)位置的权重+1，最终选择一组(a, b, r)使得权重高于一threshould\\
@@ -2195,7 +2251,7 @@ Interest Point Detection
   
   \quad \quad \quad Gaussian function：不论(x, y)是否在W内，根据(x, y)距离W中心的距离取Gaussian分部值
   
-  \quad Taylor expansion：
+  \quad Taylor expansion： 
 
   \quad \quad $I(x + u, y + v) = I(x, y) + uI_x(x, y) + vI_y(x, y)$
 
@@ -2231,7 +2287,7 @@ Interest Point Detection
 
   \quad \quad \quad 当$M_{00}, M_{11}$较大/$\lambda_1, \lambda_2$较大时，在边界拐点
 
-  \quad 定义一点在拐点几率：
+  \quad 定义一点在拐点几率：\textbf{M矩阵仅和斜率\ x\ y相关，和u v无关}
 
   \quad \quad Harris and Stephens：$R = \lambda_1\lambda_2 - k(\lambda_1 + \lambda_2)^2$，k常取0.05
 
@@ -2239,7 +2295,13 @@ Interest Point Detection
 
   \quad \quad Noble：$R = \frac{\lambda_1\lambda_2}{\lambda_1 + \lambda_2 + \epsilon}$
 
-  \quad \quad 简化以上计算：$det(M) = \lambda_1\lambda_2$，$trace(M) = \lambda_1 + \lambda_2$
+  \quad \quad 简化以上计算：$det(M) = \lambda_1\lambda_2$，对角线求和$trace(M) = \lambda_1 + \lambda_2$
+
+  \quad Harris detector为rotation invarient，非scale invarient
+
+  \quad \quad 由于scale 后corner 判断值偏向edge
+
+  \quad \quad 
 
   scaling 后图像进行interest point detection：
 
@@ -2252,6 +2314,12 @@ Interest Point Detection
       \end{bmatrix}$
 
   \quad \quad 其中$I_x(x, y, \sigma)$为图像在(x, y)位置\ 放大$\sigma$\ 在水平方向的斜率
+
+  \quad scale space extrema：
+
+  \quad \quad 1. 对图片使用n个不同$\sigma$的gaussian卷积，$\sigma$较大时\ 主要物体harris detector输出较大
+
+  \quad \quad 2. 对1.中第i层harris detector输出中(x, y)位置像素，若此像素为n层输出中(x, y)位置最大值，并为第i结果(x, y)位置临近像素中最大值。则此(像素, $\sigma_i$)作为scale space extrema。
 
   Laplacian of Gaussian LoG：
 
@@ -2270,6 +2338,8 @@ Interest Point Detection
 
   \quad \quad $ = f * (-\frac{1}{\pi\sigma^4}(1 - \frac{x^2 + y^2}{2\sigma^2})e^{-\frac{x^2 + y^2}{2\sigma^2}})$
 
+  \quad \quad 其中$\Delta g(x, y)$部分型如草帽，称Marr's wavelet
+
   \quad **$LoG_{norm}(x, y, \sigma) = \sigma^2(I_{xx}(x, y, \sigma) + I_{yy}(x, y, \sigma))$**
 
   Difference of Gaussian DoG
@@ -2277,8 +2347,10 @@ Interest Point Detection
   \quad $DoG(x, y, \sigma) = I * g(k\sigma) - I * G(\sigma)$
   
   \quad \quad $g(\sigma)$为使用$\sigma$的二维Gaussian卷积函数
+
+  \quad \quad 即使用两不同$\sigma$Gaussian 卷积核计算输出相减
   
-  \quad **$DoG(x, y, \sigma) \approx (k - 1)\sigma^2\bigtriangledown^2G(x, y, \sigma)$**\\
+  \quad **$DoG(x, y, \sigma) \approx (k - 1)\sigma^2 \Delta (2G(x, y, \sigma))$**\\
 Feature Description
 
   根据descriptor将不同图像上的像素对应
@@ -2313,19 +2385,19 @@ Feature Description
 
   \quad \quad 取$\frac{dDoG(v + \delta)}{d\delta} = 0$，则$\delta = -\frac{d^2DoG}{dv^2}^{-1}\frac{dDoG}{v}$。$DoG(v + \delta)$有最值
 
-  \quad \quad **则$v + \delta$为key point，并有refined scale**
+  \quad \quad 则$v + \delta$中xy项为key point坐标，$\sigma$为refined scale
 
   \quad orientation assignment：
 
-  \quad \quad 在keypoint周围采样像素，窗口大小$\propto \sigma$
+  \quad \quad 在keypoint周围采样像素，\textbf{采样时使用固定大小窗口}。目标为得到此key point的方向，用于生成descriptor时从旋转后的窗口取样
 
   \quad \quad 将360度角度分为36 bin，每一bin占10度。采集像素的角度被分入36个bin中，斜率总和最大的bin作为此key point的角度
 
   \quad key point descriptor：
-  
-  \quad \quad 将图像分为网格，每一网格内将方向分为8 bin，每一bin为一方向的斜率总和
 
-  \quad \quad \quad **和orientation assignment区别**
+  \quad \quad 采样窗口大小$\propto \sigma$，即采样的像素个数不变，间隔$\propto \sigma$
+  
+  \quad \quad 将采样后的像素分入网格，每一网格内方向分为8 bin，每一bin为一方向的斜率总和
 
   \quad \quad descriptor为将每一grid的8 bin连接
 
@@ -2383,7 +2455,7 @@ Feature Description
 
   \quad 3. 当满足的样本个数到达threshould则停止，否则重复1.取点
 
-  \quad **应用在key point match**
+  \quad 求两图像的key point matching即求key point的线性函数。xy权重即旋转矩阵，偏差即位移
   
   Speeded-Up Robust Feature SRUF：feature descriptor
 
