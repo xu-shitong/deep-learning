@@ -26,8 +26,14 @@
 \textbf{hyperparameter超参数}：人为设定的参数。如样本个数（批量大小batch size）$|B|$，学习率$\eta $。少数情况下通过学习得到\\
 \textbf{W 一层layer的权重矩阵}：行数 = 前层节点数，列数 = 当前层节点数\\
 \textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接\\
-\textbf{sigmoid函数}：$\sigma(x) = \frac{1}{1+e^{-x}}$\\
-\textbf{tanh函数}：$tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$\\
+\textbf{sigmoid函数}：$\sigma(x) = \frac{1}{1+e^{-x}}$ 可能造成gradient vanishment\\
+\textbf{tanh函数}：
+
+  $tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$ 
+
+  平均值在0，计算开销较大。允许输出为负值，比sigmoid学习效率高。
+  
+  多层tanh或sigmoid都将降低学习效率\\
 \textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正\ 2. 值总和为1\\
 \textbf{Parapetric ReLU}：
 
@@ -50,6 +56,13 @@
       x & x \geq 0
     \end{cases}
   \end{equation*}\\
+\textbf{SoftPlus激活函数}：
+
+  $SoftPlus(x) = \frac{1}{\beta} \log(1 + exp(\beta x))$
+
+  形如ReLU，拐点连续可导。当$\beta$增大时，接近ReLU
+
+  为保证Numerical stability，当$\beta x > $阈值时，当做线性激活函数\\
 \textbf{catagorical cross entropy交叉熵}
 
   定义：分部p\ 和\ 分部q\ 间的\ cross entropy $H(p, q) = -E_p(\log (q))$。为\ expected value of $log (q)$ with respect to distribution p
@@ -80,6 +93,29 @@
   \quad \quad multi label时将每一label分别进行binary cross entropy后求和
   
   \quad multi-label regression代价值为每一label预测值的binary cross entropy求和\\
+\textbf{Smooth L1}代价函数
+
+  $loss(x, y) = \frac{1}{n}\sum_iz_i$
+
+  \begin{equation*}
+    z_i = \begin{cases}
+      \alpha (x_i - y_i)^2 & \|x_i - y_i\| < 1\\
+      \|x_i - y_i\| - \alpha & otherwise
+    \end{cases}
+  \end{equation*}
+
+  \quad $\alpha$为超参数，目标为在$(-\alpha, \alpha)$范围内用二次函数替代L1拐点，拐点更平缓。\\
+\textbf{Neg log likelihood loss} 代价函数
+
+  每一样本输出为对m个类别的neg log likelihood，即$\hat{y} \in \mathbb{R}^m$
+
+  对一样本$n$，期望输出类别为c
+  
+  \quad 定义$w_n = [0, ..., weight[c], 0, ...]$。即仅有c位置为weight[c]的向量，weight为c类别的权重
+
+  \quad 定义$l_n = -w_n\hat{y}_n$，即取c类别的预测输出，乘以c类别权重\ 取负
+
+  对N样本，代价函数为$J = \sum_{n=1}^Nl_n$\\  
 \textbf{指数加权移动平均}
 
   $y_t = \gamma y_{t-1}+(1-\gamma)x_t$\\
@@ -657,6 +693,12 @@
 
   \quad 得到$\sigma^2$, $\mu$后对此通道此批量内所有元素求标准化\\
 \textbf{ResNet残差网络}
+
+  使用原因：
+  
+  \quad 由于网络输入常为(0, 1)区间的值，使用乘法导致前向传输值不断减小。残差网络将两层有助于维持输出值大小
+
+  \quad 存在前向传输路径跨过多层网络，有助于维持输出值大小
 
   \textbf{残差块}
 
@@ -1395,7 +1437,7 @@
 
   创建方法：
 
-  \quad Count-based：co-occurrence matrix 
+  \quad Count-based：co-occurence matrix 
 
   \quad Prediction-based：word2vec，GLOVE，BERT
 
@@ -1689,6 +1731,52 @@
   给定词$w_a, w_b, w_c$，求$w_d$使得$w_a : w_b$关系类似$w_c:w_d$
 
   算法：使用KNN，寻找向量临近$v_b - v_a + v_c$\\
+\textbf{Transformer}
+
+  self attention：使用词序中其余词代表一词
+
+  \quad 定义：
+
+  \quad \quad $W^Q$：queries矩阵，$W^K$：keys矩阵，$W^V$：values矩阵
+
+  \quad \quad \quad 三矩阵$\in \mathbb{R}^{D \times d_h}$，参与反向传播
+
+  \quad \quad \quad D为词向量长度，$d_h$为每一词query key value向量长度
+
+  \quad \quad $X \in \mathbb{R}^{T \times D}$为所有词向量vstack，T为时序长度。
+  
+  \quad \quad $Q = XW^Q$，$K = XW^K$，$V = XW^K$
+  
+  \quad \quad 令词$i$有词向量$w_i$，则有query $W^Qw_i$，key $W^Kw_i$，value $W^Vw_i$
+
+  \quad self-attention值：$Z \in \mathbb{R}^{T \times d_h}= softmax(\frac{QK^T}{\sqrt{d_h}}) V$
+
+  \quad \quad 对一词$i$计算中，将其query值与所有其余词的key值点乘\ 除以$\sqrt{d_h}$\ 经过softmax，作为其余词和词$i$的相似度
+
+  \quad \quad 除以$\sqrt{d_h}$，用于减小softmax后的peak
+
+  \quad \quad 相似度做为权重，求value的加权平均值
+
+  Multi-head self-attention：
+
+  \quad 使用head$H$组$W^Q, W^K, W^V \in \mathbb{R}^{D / H \times d_h}$。
+
+  \quad 输出的H组$Z_i$连接后经过全连接层，张量形状由(T, D)转为(T, )
+
+  Positional encoding：对词在句中位置进行编码，使transformer类似RNN有时序性
+  
+  \quad PE matrix$\in \mathbb{R}^{maxT, D}$
+  
+  \quad \quad \begin{equation*}
+      PE_{pos, i} = \begin{cases}
+      \sin(\frac{pos}{10000^{\frac{i}{d}}}) & even(i)\\
+      \cos(\frac{pos}{10000^{\frac{i}{d}}}) & odd(i)
+      \end{cases}
+    \end{equation*}
+    
+  \quad \quad maxT为最大可能的词序长度，D为词向量长度
+  
+  \quad \quad 前向传播时对T长度的词序(Batch\_size, T, D)，按元素相加PE[:T]矩阵，输出张量形状仍为(Batch\_size, T, D)\\
 \textbf{二. 文本情感分类}
 
   分析文本作者的情感
