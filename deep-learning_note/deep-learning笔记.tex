@@ -667,6 +667,8 @@
 
   有拉伸$\gamma$, 偏移$\beta$参数参与反向传播，初始化$\gamma = \vec{1}, \beta = \vec{0}$
 
+  使用时无需和dropout合用，**两者目标相同**。batch size 64-256间，保证计算的mean variance有普遍性
+
   批量归一化层有可变$\mu', \sigma^{2'}$用于预测时进行批量归一。每一迭代由动量$\eta$更新
   
   \quad 初始化$\mu' = \vec{0}, \sigma^{2'} = \vec{1}$
@@ -802,7 +804,7 @@
   \quad 仅需在一epoch开始时初始化隐藏层结果，而非在每一批量开始初始化\\
 \textbf{裁剪梯度}
 
-  将所有参数斜率拼接成向量$g$，进行裁剪：$g' = min(\frac{\theta}{||g||}, 1)g$
+  将所有参数斜率拼接成向量$g$，进行裁剪：$g' = min(\frac{\theta}{\|g\|}, 1)g$
   
   \quad 即所有斜率一次迭代中最多更改$\theta$\\
 \textbf{困惑度 perplexity}
@@ -1433,7 +1435,7 @@
 
   词赋予两个向量$v_o, v_c$，分别为将词作为中心词和作为背景词使用的词向量
   
-  \quad 词间夹角$\frac{u_o^Tv_c}{||u_o||\space||v_c||} \in [-1, 1]$为词的相似度
+  \quad 词间夹角$\frac{u_o^Tv_c}{\|u_o\|\space\|v_c\|} \in [-1, 1]$为词的相似度
 
   创建方法：
 
@@ -1451,7 +1453,7 @@
 
   \quad $v_i$：词$w_i$对应的实数向量
   
-  \quad \quad 向量夹角余弦值$\frac{x^Ty}{||x||\space ||y||}$代表两个词的关联程度
+  \quad \quad 向量夹角余弦值$\frac{x^Ty}{\|x\|\space \|y\|}$代表两个词的关联程度
 
   \quad 背景窗口大小$n$：定义对一个中心词$w_i$，背景词取值范围$=[$中心词$-n$, 中心词$+n]$。
   
@@ -1963,7 +1965,7 @@
 
   \quad \quad $\hat{R}_{ui} = PQ^T_{ui} + b_u + b_i$
 
-  \quad 代价函数：$\sum_{(u, i)} ||R_{ui} - \hat{R_{ui}}||^2 + \lambda(||P||_F^2 + ||Q||_F^2 + b_u^2 + b_i^2)$
+  \quad 代价函数：$\sum_{(u, i)} \|R_{ui} - \hat{R_{ui}}\|^2 + \lambda(\|P\|_F^2 + \|Q\|_F^2 + b_u^2 + b_i^2)$
 
   \quad \quad 即，对$\hat{R}$使用平方代价函数，对$P, Q, b_u, b_i$使用L2 正则 
 
@@ -1977,7 +1979,7 @@
 
   \quad \quad f, g为激活函数。可取f为linear activation，g为sigmoid + 0.05 dropout层
 
-  \quad 代价函数：$\sum_{i=1}^{m}||R_{*i} - \hat{R_{*i}}||_O^2 + \lambda (||W||_F^2 + ||V||_F^2)$
+  \quad 代价函数：$\sum_{i=1}^{m}\|R_{*i} - \hat{R_{*i}}\|_O^2 + \lambda (\|W\|_F^2 + \|V\|_F^2)$
 
   \quad \quad 即对每一用户，计算对其偏好向量的预测，和实际的偏好向量求平方代价函数。
 
@@ -2136,7 +2138,7 @@
 
   令$X \sim P$，有pdf$p(x)$。使用另一分部$Q$估计$P$，有pdf$q(x)$
 
-  relative entropy $D_{KL}(P || Q) = E_{x \sim P}(log(\frac{p(x)}{q(x)}))$
+  relative entropy $D_{KL}(P \| Q) = E_{x \sim P}(log(\frac{p(x)}{q(x)}))$
 
   \quad 当$p(x) < q(x)$，$log(\frac{p(x)}{q(x)}))$为负值，绝对值较大
   
@@ -2144,17 +2146,17 @@
 
   性质：
 
-  \quad non-symmetric：$D_{KL}(P||Q) \neq D_{KL}(Q || P)$
+  \quad non-symmetric：$D_{KL}(P\|Q) \neq D_{KL}(Q \| P)$
 
-  \quad non-negative: $D_{KL}(P||Q) \geq 0$只有$P = Q$时取0
+  \quad non-negative: $D_{KL}(P\|Q) \geq 0$只有$P = Q$时取0
 
-  \quad 当存在x使得$p(x) > 0$，$q(x) = 0$。定义$D_{KL}(P||Q) = \infty$
+  \quad 当存在x使得$p(x) > 0$，$q(x) = 0$。定义$D_{KL}(P\|Q) = \infty$
 
-  \quad $I(X, Y) = D_{KL}(P(X, Y) || P(X)P(Y))$
+  \quad $I(X, Y) = D_{KL}(P(X, Y) \| P(X)P(Y))$
 
-  \quad \quad $ = E_Y(D_{KL}(P(X | Y) || P(X)))$
+  \quad \quad $ = E_Y(D_{KL}(P(X | Y) \| P(X)))$
 
-  \quad \quad $ = E_X(D_{KL}(P(Y | X) || P(Y)))$
+  \quad \quad $ = E_X(D_{KL}(P(Y | X) \| P(Y)))$
 
 % --------------------------------------------------------------------------
 % |                         图像处理 (CV 课程笔记)                           |
@@ -2549,9 +2551,17 @@ Feature Description
 
   \quad Haar wavelets：包含2 * (2, )向量，分别为$d_h = [-1, 1], d_v = [-1, 1]^T$。 **形状为(2, 2)或(4, 4)，元素为1/-1的矩阵**N
   
-  \quad 每一采样将像素和Haar wavelets按元素相乘求和，得到仅在水平/竖直方向取斜率$d_h, d_v$，
+  \quad 将采样点**周围像素**值和Haar wavelets按元素相乘求和，得到仅在水平/竖直方向取斜率$d_h, d_v$，
 
-  \quad descriptor：$(\sum d_h, \sum d_v, \sum |d_h|, \sum |d_v|)$
+  \quad \textbf{一采样点}descriptor：$(\sum d_h, \sum d_v, \sum |d_h|, \sum |d_v|)$
+
+  \quad \quad 颜色不变区域：descriptor 4值都较小
+
+  \quad \quad 纵向像素值不变(纵向条纹)：$\sum |d_h|$较大 
+
+  \quad \quad 纵向像素值不变(横向渐变)：$\sum d_h$，$\sum |d_h|$较大
+
+  \quad 一key point descriptor为将每一采样点descriptor向量连接
 
   Binary Robust Independent Elementary Feature BRIEF：
 
@@ -2562,21 +2572,21 @@ Feature Description
       \end{cases}
     \end{equation*}
 
-  \quad 在一像素周围取$n_d$对像素$(p_i, q_i)$，descriptor为$\sum_{i \leq n_d} \tau(p_i, q_i) << i$
+  \quad 在一key point周围取$n_d$对像素$(p_i, q_i)$，descriptor为$\sum_{i \leq n_d} \tau(p_i, q_i)$左移i
 
-  \quad \quad 不同**key point**共用同一随机\ 像素对\ 分部
+  \quad \quad 两图中所有key point\textbf{必须共用同一随机\ 像素对\ 分部}，由于需要相同分部才能保证描述相同像素变化趋势
 
-  \quad descriptor间距离为两descriptor XOR值
+  \quad descriptor间距离为\ 两descriptor XOR值取XOR值为1个数(即hamming distance)。
 
   \quad \textbf{假设图像仅有移动，不支持旋转，缩放后scale match}
   
   Histogram of Oriented Gradient HOG 
 
-  \quad 对一区域的像素计算feature
+  \quad 对一区域的像素\ 或整张图片计算feature
 
   \quad 将图像整体分为网格(非在某一像素周围分网格)，每一grid计算gradient orientation histogram向量$v$
 
-  \quad 多个grid 组成一block，有合并的locally normalized descriptor$v_{norm} = \frac{[v_1, v_2, ...]}{\sqrt{||[v_1, v_2, ...]||_2^2 + \epsilon^2}}$
+  \quad 多个grid 组成一block，有合并的locally normalized descriptor$v_{norm} = \frac{[v_1, v_2, ...]}{\sqrt{\|[v_1, v_2, ...]\|_2^2 + \epsilon^2}}$
 
   \quad 将block位置按卷积操作移动，HOG descriptor为所有block的descriptor连接\\
 Optic Flow
