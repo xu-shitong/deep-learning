@@ -26,7 +26,11 @@
 \textbf{hyperparameter超参数}：人为设定的参数。如样本个数（批量大小batch size）$|B|$，学习率$\eta $。少数情况下通过学习得到\\
 \textbf{W 一层layer的权重矩阵}：行数 = 前层节点数，列数 = 当前层节点数\\
 \textbf{全连接层fully-connected layer/稠密层dense layer}：此层所有节点都分别和前一层所有节点连接\\
-\textbf{sigmoid函数}：$\sigma(x) = \frac{1}{1+e^{-x}}$ 可能造成gradient vanishment\\
+\textbf{sigmoid函数}：
+
+  $\sigma(x) = \frac{1}{1+e^{-x}}$ 可能造成gradient vanishment
+  
+  为特殊的softmax：$\frac{1}{1+e^{-x}} = \frac{e^0}{e^x + e^0} = \frac{e^{x_i}}{\sum_{i \in \{0, 1\}} e^{x_i}}$\\
 \textbf{tanh函数}：
 
   $tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$ 
@@ -75,9 +79,11 @@
 
   使用：联系两个值概率分部间的差异，即可将数值输出$\hat{y}$和分类结果$y$直接做对比
 
-  \quad \textbf{适用于multi-class classification，仅有唯一类别作为输出}
+  \quad \textbf{不适用于multi-class classification，仅有唯一类别作为输出}
 
-  \quad \quad 原因：catagorical cross entropy假设\ 其余类别输出\ 随\ 期望类别输出升高\ 而降低，则忽略其余类别的输出是否为0
+  \quad \quad 原因：multi-class单一节点输出binary classification即代表2节点softmax输出，
+  
+  \quad \quad 而catagorical cross entropy假设\ 其余类别输出\ 随\ 期望类别输出升高\ 而降低，则忽略其余类别的输出是否为0
 
   \quad 仍可和softmax同时使用，softmax将可能性先转换为正数并和为1，随后使用cross entropy\\
 \textbf{binary cross entropy}
@@ -242,7 +248,11 @@
   
   \quad $\frac{dz}{dx} = W^T$
 
-  \quad $\frac{dL}{dW} = x^T\frac{dL}{dz}$\\
+  \quad $\frac{dL}{dW} = x^T\frac{dL}{dz}$
+  
+  对$z = x^TWx$有：
+  
+  \quad $\frac{dz}{dx} = (W^T + W)x$\\
 \textbf{对一层前向传播$g(Z)$, $Z = XW + \vec{b}$}
 
   X为前一层输入，即前一层g(X)矩阵
@@ -495,17 +505,23 @@
   \quad 2. 平均池化层：取池化窗口平均值
 
   \textbf{多输入通道间池化结果不相加，即\ 输入通道数 = 输出通道数}\\
-\textbf{LeNet卷积神经网络}
+\textbf{LeNet卷积神经网络} (针对(28, 28, 1)形状的输入图片)
 
-  \textbf{1.使用2组\ 卷积计算层\ 激活函数层\ 池化层}
+  \textbf{1.2组\ 卷积计算层\ 激活函数层\ 池化层}
 
-  \quad 输出通道数分别为6，16。卷积层\ kernel 为(5, 5), 步幅为1, 无padding
+  \quad 6输出通道卷积层\ kernel 为(5, 5), 2填充
 
-  \quad 激活函数层\ 对每一元素做sigmoid
+  \quad sigmoid激活函数层\ 对每一元素做sigmoid
 
   \quad 最大池化层\ 窗口(2, 2)，步幅为2
 
-  \textbf{2.使用3组全连接层}
+  \quad 16输出通道卷积层\ kernel 为(5, 5)
+
+  \quad sigmoid激活函数层\ 对每一元素做sigmoid
+
+  \quad 最大池化层\ 窗口(2, 2)，步幅为2
+
+  \textbf{2.3组全连接层}
 
   \quad 节点数120, 84, 输出节点数。除输出层使用sigmoid激活函数，即120 84节点层
 
@@ -804,7 +820,9 @@
   \quad 仅需在一epoch开始时初始化隐藏层结果，而非在每一批量开始初始化\\
 \textbf{裁剪梯度}
 
-  将所有参数斜率拼接成向量$g$，进行裁剪：$g' = min(\frac{\theta}{\|g\|}, 1)g$
+  clip by value：所有斜率限定在$[v_{min}, v_{max}]$区间
+
+  clip by norm：将所有参数斜率拼接成向量$g$，进行裁剪：$g' = min(\frac{\theta}{\|g\|}, 1)g$
   
   \quad 即所有斜率一次迭代中最多更改$\theta$\\
 \textbf{困惑度 perplexity}
@@ -1735,50 +1753,126 @@
   算法：使用KNN，寻找向量临近$v_b - v_a + v_c$\\
 \textbf{Transformer}
 
-  self attention：使用词序中其余词代表一词
+  encoder部分：
 
-  \quad 定义：
+  \quad self attention：使用词序中其余词代表一词
 
-  \quad \quad $W^Q$：queries矩阵，$W^K$：keys矩阵，$W^V$：values矩阵
+  \quad \quad 定义：
 
-  \quad \quad \quad 三矩阵$\in \mathbb{R}^{D \times d_h}$，参与反向传播
+  \quad \quad \quad $W^Q$：queries矩阵，$W^K$：keys矩阵，$W^V$：values矩阵
 
-  \quad \quad \quad D为词向量长度，$d_h$为每一词query key value向量长度
+  \quad \quad \quad \quad 三矩阵$\in \mathbb{R}^{D \times d_h}$，参与反向传播
 
-  \quad \quad $X \in \mathbb{R}^{T \times D}$为所有词向量vstack，T为时序长度。
+  \quad \quad \quad \quad D为词向量长度，$d_h$为每一词query key value向量长度
+
+  \quad \quad \quad $X \in \mathbb{R}^{T \times D}$为所有词向量vstack，T为时序长度。
   
-  \quad \quad $Q = XW^Q$，$K = XW^K$，$V = XW^K$
+  \quad \quad \quad $Q = XW^Q$，$K = XW^K$，$V = XW^K$
   
-  \quad \quad 令词$i$有词向量$w_i$，则有query $W^Qw_i$，key $W^Kw_i$，value $W^Vw_i$
+  \quad \quad \quad 令词$i$有词向量$w_i$，则有query $W^Qw_i$，key $W^Kw_i$，value $W^Vw_i$
 
-  \quad self-attention值：$Z \in \mathbb{R}^{T \times d_h}= softmax(\frac{QK^T}{\sqrt{d_h}}) V$
+  \quad \quad self-attention值：$Z \in \mathbb{R}^{T \times d_h}= softmax(\frac{QK^T}{\sqrt{d_h}}) V$
 
-  \quad \quad 对一词$i$计算中，将其query值与所有其余词的key值点乘\ 除以$\sqrt{d_h}$\ 经过softmax，作为其余词和词$i$的相似度
+  \quad \quad \quad 对一词$i$计算中，将其query值与所有其余词的key值点乘\ 除以$\sqrt{d_h}$\ 经过softmax，作为其余词和词$i$的相似度
 
-  \quad \quad 除以$\sqrt{d_h}$，用于减小softmax后的peak
+  \quad \quad \quad 除以$\sqrt{d_h}$，用于减小softmax后的peak
 
-  \quad \quad 相似度做为权重，求value的加权平均值
+  \quad \quad \quad 相似度做为权重，求value的加权平均值
 
-  Multi-head self-attention：
+  \quad Multi-head self-attention：
 
-  \quad 使用head$H$组$W^Q, W^K, W^V \in \mathbb{R}^{D / H \times d_h}$。
+  \quad \quad 使用head$H$组$W^Q, W^K, W^V \in \mathbb{R}^{D / H \times d_h}$。
 
-  \quad 输出的H组$Z_i$连接后经过全连接层，张量形状由(T, D)转为(T, )
+  \quad \quad 输出的H组$Z_i$连接后经过全连接层，张量形状$(T, d_h)$不变
 
-  Positional encoding：对词在句中位置进行编码，使transformer类似RNN有时序性
+  \quad Masked multi-head self-attention：
+
+  \quad \quad 每一head权重部分$\frac{QK^T}{\sqrt{d_h}}$按元素相乘三角矩阵，三角矩阵中上三角为负常数，常取$-10^9$。
+
+  \quad \quad \quad 目的：softmax后使得$i$位置的词仅能和$[0, i]$范围内的词计算attention
+
+  \quad position-wise feed-forward network PWFFN：
+
+  \quad \quad $FNN(X) = ReLU(XW_1 + b_1)W_2 + b_2$，其中$W_1 \in \mathbb{R}^{D \times d_{ff}}, W_2 \in \mathbb{R}^{d_{ff} \times D}$
+
+  \quad \quad 即两层全连接层，由ReLU + dropout连接。层间使用$d_{ff}$长度向量代表信息，$d_{ff}$常取2048
+
+  \quad \quad 称position-wise，由于每一词$\in \mathbb{R}^D$使用相同权重
+
+  \quad Positional encoding：对词在句中位置进行编码，使transformer类似RNN有时序性
   
-  \quad PE matrix$\in \mathbb{R}^{maxT, D}$
+  \quad \quad PE matrix$\in \mathbb{R}^{maxT, D}$
   
-  \quad \quad \begin{equation*}
+  \quad \quad \quad \begin{equation*}
       PE_{pos, i} = \begin{cases}
       \sin(\frac{pos}{10000^{\frac{i}{d}}}) & even(i)\\
       \cos(\frac{pos}{10000^{\frac{i}{d}}}) & odd(i)
       \end{cases}
     \end{equation*}
     
-  \quad \quad maxT为最大可能的词序长度，D为词向量长度
+  \quad \quad \quad maxT为最大可能的词序长度，D为词向量长度
   
-  \quad \quad 前向传播时对T长度的词序(Batch\_size, T, D)，按元素相加PE[:T]矩阵，输出张量形状仍为(Batch\_size, T, D)\\
+  \quad \quad \quad 前向传播时对T长度的词序(Batch\_size, T, D)，按元素相加PE[:T]矩阵，输出张量形状仍为(Batch\_size, T, D)
+  
+  \quad \textbf{encoder layer：包含两残差块}
+
+  \quad \quad 输入为(批量大小, 时序长度, 词向量长度)，在以下操作间形状不变
+
+  \quad \quad 1. 第一残差块$f(x) - x$对应self-attention输出。$x$部分为原输入不变
+  
+  \quad \quad 2. 残差块输出通过批量归一层
+
+  \quad \quad 3. 第二残差块$f(x) - x$为PWFFN输出
+
+  \quad \quad \quad PWFFN对每一批量中每一时序的词使用相同全连接层，所以称position wise
+
+  \quad \quad 4. 批量归一层
+
+  \quad \textbf{encode结构}：
+
+  \quad \quad 1. embedding，将词序转为词向量
+
+  \quad \quad 2. position encoding层
+
+  \quad \quad 3. 多层encoder layer
+
+  \quad \quad 最终encoder输出结果为多层encoder layer最终输出
+
+  decoder部分：
+
+  \quad \textbf{decoder layer}：三层(残差块, 批量归一)，每一层残差块$f(x) - x$分别为以下部分
+
+  \quad \quad 1. multi-head self-attention：
+  
+  \quad \quad \quad 使用mask，$QKV$计算中使用同一X，即上一decoder layer输出\ 或词向量 + Position embedding结果 
+  
+  \quad \quad 2. Masked multi-head self-attention：
+  
+  \quad \quad \quad $Q = XW^Q$中X为1.的输出
+  
+  \quad \quad \quad $K = XW^K$，$V = XW^K$中X为encoder输出，不同decoder layer使用相同\ 唯一的encoder输出
+
+  \quad \quad 3. PWFFN
+
+  \quad \textbf{decoder结构}
+
+  \quad \quad 
+  
+\textbf{BERT}
+
+  输入为两词序连接后的一整词序
+
+  pre-training：由Input Embedding得到输入，输出为NSP和MLM连接结果
+
+  \quad Input Embedding：将词转为词向量，和Position encoding，segment embedding按元素相加
+  
+  \quad Masked Language Model MLM
+  
+  \quad \quad 更改文本中15\%的词：其中80\%的情况词被掩盖，替换为[MASK]。10\%的情况替换为任意词，10\%的情况不更改词
+  
+  \quad Next Sentence Prediction NSP：
+  
+  \quad \quad \\
 \textbf{二. 文本情感分类}
 
   分析文本作者的情感
@@ -2589,6 +2683,21 @@ Feature Description
   \quad 多个grid 组成一block，有合并的locally normalized descriptor$v_{norm} = \frac{[v_1, v_2, ...]}{\sqrt{\|[v_1, v_2, ...]\|_2^2 + \epsilon^2}}$
 
   \quad 将block位置按卷积操作移动，HOG descriptor为所有block的descriptor连接\\
+目标检测：Two-stage object detection
+
+  包含region proposal，得到锚框位置。classifier 对每一锚框得到标签
+
+  selective search：region proposal方法
+
+  \quad 将有类似颜色/材质/亮度的区域合并，合并后区域对应一锚框
+
+  R-CNN：selective search + SVM classification 
+
+  Fast R-CNN：selective search + CNN classification
+
+  Faster R-CNN：regional proposal network (CNN) + CNN classification
+
+
 Optic Flow
 
   估计视频中的亮度在x,y方向分别移动(u, v)
