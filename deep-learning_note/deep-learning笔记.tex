@@ -1249,7 +1249,9 @@
 
   \textbf{边界框预测层}：
 
-  \quad 输入结构同类别预测层，输出通道数为$a * 4$，4对应一个锚框有4个偏差值，每一通道输出仍为矩阵，第$(i-1)*(q+1) + j$通道包含锚框层$c_i$中所有锚框的第$i$号偏差值
+  \quad 输入结构同类别预测层，输出通道数为$a * 4$，4对应一个锚框有4个偏移量，每一通道输出仍为矩阵，第$(i-1)*(q+1) + j$通道包含锚框层$c_i$中所有锚框的第$i$号偏移量
+
+  \quad \textbf{CNN预测偏移量，而非锚框边界值}
 
   \textbf{连接多尺度预测}：
 
@@ -1300,29 +1302,34 @@
   \quad \quad \quad 锚框数*4大小的张量，代表每一锚框的偏移量。负类锚框的偏移量被忽略
   
   \quad \quad \quad \textbf{针对同一网络，不同迭代中产生的锚框位置\ 大小不变。由于目标框计算基于交并比，偏移量计算值不变。计算偏移量代价作用为：检查网络对偏移量的预估是否正确}\\
-\textbf{R-CNN 区域卷积神经网络}
+\textbf{Two-stage object detection}
+  
+  包含 region proposal 得到锚框位置，classifier 对每一锚框得到标签。相较SSD耗时长，精度高
+  
+  selective search：region proposal方法
 
-  对每一提议区域做卷积神经网络训练，耗时长\\
-\textbf{Fast R-CNN}
+  \quad 将有类似颜色/材质/亮度的区域合并，合并后区域对应一锚框
 
-  \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+  \textbf{R-CNN}：selective search + SVM classification 
+
+  \textbf{Fast R-CNN}：selective search + CNN classification
+
+  \quad \begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
     \centering %图片居中
     \includegraphics[width=0.6\textwidth]{note_images/Fast_R-CNN.png} %插入图片，[]中设置图片大小，{}中是图片文件名
   \end{figure}
 
-  与\texttt{R-CNN}区别：
+  \quad 1. CNN卷积层，负责抽取特征。输出通道数为$c$
 
-  \quad 1.提取特征的神经网络为整个图像
+  \quad 2. 使用selective search得到$n$个锚框。\textbf{输入仍为原图像，非1.中结果}
 
-  \quad \quad 当输入为一张图片时，输出形状为$(1, c, h_1, w_1)$
+  \quad 3. ROI Pooling兴趣区域池化层
+  
+  \quad \quad 根据2.中锚框$(h_1, w_1)$，从1.中选取锚框对应位置的特征作为ROI Pooling输入。
+  
+  \quad \quad ROI Pooling将不同锚框$i$的输出$(c, h_i, w_i)$统一为$(n, c, h, w)$形状输出
 
-  \quad 2.选择性搜索$n$个提议区域，
-
-  \quad 3.兴趣区域池化层\ 输出$(n, c, h_2, w_2)$
-
-  \quad \quad 可指定池化窗口任意矩形区域作为一个池化结果的源，所以可产生任意形状池化结果
-
-  \quad \quad 例：
+  \quad \quad ROI Pooling例：
     $\begin{bmatrix}
       x_{11} & x_{12} & x_{13} \\
       x_{21} & x_{22} & x_{23} \\
@@ -1337,11 +1344,35 @@
       \end{bmatrix}$
     做输出$y_{11}$和$y_{21}$的来源
 
-  \quad 4.全连接层\ 输出变为$(n, d)$，$d$为超参数
+  \quad 4. 将3.中结果flatten，经过全连接层。输出$(n, d)$，$d$为超参数。即每一锚框有特征向量，长度为$d$
 
-  \quad 5.预测类型使用$softmax回归$，输出$(n, q)$
+  \quad 5. classification层：包含2个全连接层，输入同为4.中结果
 
-  \quad \quad 预测边界框时，输出$(n, 4)$\\
+  \quad \quad 预测类别，对$n$个锚框预测$q$种类别，形状为$(n, q)$
+
+  \quad \quad 预测边界框，对$n$个锚框分别计算4个偏移量，形状为$(n, 4)$
+  
+  \quad \quad 代价函数：对每一锚框特征向量：$L_{cls}(\hat{y}, y) + \lambda(\vec{1} \cdot L_{loc}(t, t^*))$
+
+  \quad \quad \quad $L_{cls}$为分类代价值，对锚框中特征分类
+
+  \quad \quad \quad $L_{loc}$为边界框预测代价函数，进一步优化锚框位置。$t_i, t_i^*$为此锚框预测/期望的偏移量
+
+  \textbf{Faster R-CNN}：regional proposal network (CNN) + CNN classification
+
+  \quad 所有部分同Fast R-CNN，除了2.中selective search由RPN替代
+
+  \quad Regional Proposal Network RPN：region proposal方法
+
+  \quad \quad 得到1.中结果$()$，得到是否为一可能的锚框位置\ 锚框的边界
+
+  \quad \quad 代价函数：$\sum_i^nL_{cls}(p_i, p_i^*) + \lambda\sum_i^n\vec{1} \cdot L_{loc}(t_i, t_i^*)$
+
+  \quad \quad \quad \textbf{输出仅为锚框位置，锚框大小由边界框定义，类别由随后classification决定}
+  
+  \quad \quad \quad $L_{cls}$为classification loss，判断锚框$i$是否包含一物体
+
+  \quad \quad \quad $L_{loc}$为边界框预测代价函数，算法同5.中$L_{loc}$\\
 \textbf{图像分割}
 
   区分图片中一个物体的不同部分，不将每一物体和标签对应\\
@@ -2683,21 +2714,6 @@ Feature Description
   \quad 多个grid 组成一block，有合并的locally normalized descriptor$v_{norm} = \frac{[v_1, v_2, ...]}{\sqrt{\|[v_1, v_2, ...]\|_2^2 + \epsilon^2}}$
 
   \quad 将block位置按卷积操作移动，HOG descriptor为所有block的descriptor连接\\
-目标检测：Two-stage object detection
-
-  包含region proposal，得到锚框位置。classifier 对每一锚框得到标签
-
-  selective search：region proposal方法
-
-  \quad 将有类似颜色/材质/亮度的区域合并，合并后区域对应一锚框
-
-  R-CNN：selective search + SVM classification 
-
-  Fast R-CNN：selective search + CNN classification
-
-  Faster R-CNN：regional proposal network (CNN) + CNN classification
-
-
 Optic Flow
 
   估计视频中的亮度在x,y方向分别移动(u, v)
