@@ -1197,7 +1197,7 @@
 
   \quad \quad 4. 对每一未对应锚框$A_i$，寻找X中i行最大交并比，若值大于阈值，为$A_i$分配对应目标框，若没有交并比大于阈值，目标框为整个图片。
 
-  \quad \quad 被赋予目标框的锚框称正类锚框，否则为负类锚框
+  \quad \quad 被赋予背景目标框的锚框称负类锚框，否则为正类锚框
 
   \quad 赋偏移量
 
@@ -2532,9 +2532,15 @@ Interest Point Detection
 
   \quad scale space extrema：
 
-  \quad \quad 1. 对图片使用n个不同$\sigma$的gaussian卷积，$\sigma$较大时\ 主要物体harris detector输出较大
+  \quad \quad 对多个scale的图像输入，选择key point满足：此像素为不同scale层输出中(x, y)位置最大值，并为第i结果(x, y)位置临近8像素中最大值
 
-  \quad \quad 2. 对1.中第i层harris detector输出中(x, y)位置像素，若此像素为n层输出中(x, y)位置最大值，并为第i结果(x, y)位置临近像素中最大值。则此(像素, $\sigma_i$)作为scale space extrema。
+  \quad scale adapted harris detector：
+
+  \quad \quad 对图片使用n个不同$\sigma$的gaussian卷积，对每一卷积结果每一像素计算harris detector值
+
+  \quad \quad harris detector结果做scale space extrema输入，得到可选key point
+      
+  \quad \quad 若可选key point harris detect值高于阈值。则此点做最终key point
 
   Laplacian of Gaussian LoG：
 
@@ -2565,7 +2571,7 @@ Interest Point Detection
 
   \quad \quad 即使用两不同$\sigma$Gaussian 卷积核计算输出相减
   
-  \quad **$DoG(x, y, \sigma) \approx (k - 1)\sigma^2 \Delta (2G(x, y, \sigma))$**\\
+  \quad **$DoG(x, y, \sigma) \approx (k - 1)\sigma^2 \Delta^2 (G(x, y, \sigma))$**\\
 Feature Description
 
   根据descriptor将不同图像上的像素对应
@@ -2586,9 +2592,11 @@ Feature Description
 
   \quad 相邻Gaussian filter间计算差值，得到N-1个DoG结果
 
-  \quad key point assignment：
+  \quad 对DoG结果使用scale space extrema得到key point
   
-  \quad \quad 假设key point周围像素值以二次函数分部，得到最优的key point$v = (x, y, \sigma)$使得$DoG(v)$值
+  \quad key point refine：
+  
+  \quad \quad 假设key point周围像素值以二次函数分部，得到refine的key point$v = (x, y, \sigma)$使得$DoG(v)$值为极值。此时$v$不一定在一整数像素/$\sigma$上
 
   \quad \quad 通过Taylor 展开：$DoG(v + \delta) = DoG(v) + \frac{dDoG^T}{dv}\delta + \frac{1}{2}\delta^T\frac{d^2DoG}{dv^2}\delta$
 
@@ -2618,9 +2626,9 @@ Feature Description
 
   \quad keypoint matching
 
-  \quad \quad 使用euclidian distance对应两图key point
+  \quad \quad 1. 使用euclidian distance对应两图key point
 
-  \quad \quad 一对key point(u, v)(x, y)得到key point间转换表达式：
+  \quad \quad 2. 对1.中对应上的key point(u, v)(x, y)得到key point间转换表达式：
 
   \quad \quad \quad $[u, v]^T = 
     \begin{bmatrix}
@@ -2660,17 +2668,15 @@ Feature Description
 
   \quad \quad \quad 求解$m = (A^TA)^{-1}A^Tb$
 
-  Random Sample Consensus RANSAC：
+  \quad \quad Random Sample Consensus RANSAC：另一得到key point间转换方法
 
-  \quad 目标：对一组数据找到线性函数关系
+  \quad \quad \quad 1. 任取两点，得到两点定义的线性函数$f(x)$
 
-  \quad 1. 任取两点，得到两点定义的线性函数$f(x)$
+  \quad \quad \quad 2. 计算满足$f(x') - \epsilon \leq y' \leq f(x') + \epsilon$的样本$(x', y')$个数
 
-  \quad 2. 计算满足$f(x') - \epsilon \leq y' \leq f(x') + \epsilon$的样本$(x', y')$个数
+  \quad \quad \quad 3. 当满足的样本个数到达threshould则停止，否则重复1.取点
 
-  \quad 3. 当满足的样本个数到达threshould则停止，否则重复1.取点
-
-  \quad 求两图像的key point matching即求key point的线性函数。xy权重即旋转矩阵，偏差即位移
+  \quad \quad \quad 求两图像的key point matching即求key point的线性函数。xy权重即旋转矩阵，偏差即位移
   
   Speeded-Up Robust Feature SRUF：feature descriptor
 
@@ -2752,6 +2758,8 @@ Optic Flow
       \end{bmatrix}$
     则Ax = b
 
+  \quad \quad 根据假设3，A中点$p_i$取一较小区域内像素
+
   \quad 取$x = argmin_x\|Ax - b\|^2$为最优$[u, v]^T$
 
   \quad 则有$x = (A^TA)^{-1}A^Tb$
@@ -2768,39 +2776,53 @@ Optic Flow
       I_y(p_i)I_t(p_i)
       \end{bmatrix}$
 
-  % \quad **sampling方法，算法目标，l标记**
+  multi-scale Lucas-Kanade method：得到较大范围的移动
 
-  % \quad 1. 从上一sampling 层**$l - 1$**中计算此层(u, v)：$u^l = 2u^{l-1}, v^l = 2v^{l-1}$
+  \quad 对图片up sampling：一层up sample对2x2区间取一像素，scale 编号由sampling最多scale至原图scale
 
-  % \quad 2. 计算warped image：$I^l_{warped} = I^l(x + u, y + v, t+1)$
+  \quad 1. 从上一sampling 层**$l - 1$**中计算此层(u, v)：$u^l = 2u^{l-1}, v^l = 2v^{l-1}$
 
-  % \quad 3. 计算$I_t = I^l_{warped}(x + u^{l-1}, y + v^{l-1}, t+1) - I^l(x, y)$。$I_x, I_y$由$I_l$计算得
+  \quad 2. 计算warped image：$I^l_{warped} = I^l(x + u, y + v, t+1)$
 
-  % \quad 4. 计算incremental flow：$[u^{\delta}, v^{\delta}]^T = (A^TA)^{-1}A^Tb$
+  \quad \quad 即根据上层$u, v$预测移动此scale的$t$时刻图像
 
-  % \quad 5. 更新$u^l = u^{l-1} + u^{\delta}, v^l = v^{l-1} + v^{\delta}$
+  \quad 3. 计算$I_t = I^l_{warped}(x + u^{l-1}, y + v^{l-1}, t+1) - I^l(x, y)$。$I_x, I_y$由$I_l$计算得
 
-  Horn-Schunck method：每一像素有(u, v)
+  \quad \quad 使用2.中移动的图像计算精确的$u, v$量，refine scale。直接对此scale计算则无法得到较大$u, v$值
 
-  \quad 最小化$E = \int_{p_i} (I_x(p_i)u + I_y(p_i)v + I_t(p_i))^2 + \alpha (\Delta u^2 + \Delta v^2) \,dxdy $
+  \quad 4. 计算incremental flow：$[u^{\delta}, v^{\delta}]^T = (A^TA)^{-1}A^Tb$
 
-  \quad \quad 即最小化临近像素的方向向量改变量
+  \quad 5. 更新$u^l = u^{l-1} + u^{\delta}, v^l = v^{l-1} + v^{\delta}$
+
+  Horn-Schunck method：
+  
+  \quad 定义函数u, v，$u(x, y), v(x, y)$为在像素x, y位置的水平/竖直方向移动
+
+  \quad 最小化$E = \int_{y}\int_{x} (I_xu + I_yv + I_t)^2 + \alpha (\|\nabla u^2\| + \|\nabla v^2\|) \,dxdy $
+
+  \quad \quad 即最小化临近像素的方向向量改变量，积分中所有函数针对$x, y$位置进行求导/取值
 
   \quad 由Euler Lagrange equation：
 
-  \quad \quad $(I_x(p_i)u + I_y(p_i)v + I_t(p_i))I_x(p_i) - \alpha\Delta u = 0$
+  \quad \quad $(I_xu + I_yv + I_t)I_x - \alpha\Delta u = 0$
   
-  \quad \quad $(I_x(p_i)u + I_y(p_i)v + I_t(p_i))I_y(p_i) - \alpha\Delta v = 0$
+  \quad \quad $(I_xu + I_yv + I_t)I_y - \alpha\Delta v = 0$
  
   \quad \quad \quad $\Delta$为Laplace operator
 
-  \quad 带入$\Delta u = \bar{u} - u$
+  \quad 带入$\Delta u = \bar{u} - u$，$\bar{u}$为一小像素区域内的$u, v$平均值
 
-  \quad \quad $(I_x(p_i)^2 + \alpha)u + I_x(p_i)I_y(p_i)v = \alpha \bar{u} - I_x(p_i))I_t(p_i)$
+  \quad \quad $(I_x^2 + \alpha)u + I_xI_yv = \alpha \bar{u} - I_xI_t$
   
-  \quad \quad $(I_y(p_i)^2 + \alpha)v + I_x(p_i)I_y(p_i)u = \alpha \bar{v} - I_y(p_i))I_t(p_i)$
+  \quad \quad $(I_y^2 + \alpha)v + I_xI_yu = \alpha \bar{v} - I_yI_t$
 
-  \quad 得到$u, v$关于$\bar{u}, \bar{v}$的公式
+  \quad 得到$u, v$关于$\bar{u}, \bar{v}$的公式：
+
+  \quad \quad $u = \bar{u} - \frac{I_x(I_x\bar{u} + I_y\bar{v} + I_t)}{I_x^2 + I_y^2 + \alpha}$
+  
+  \quad \quad $v = \bar{v} - \frac{I_y(I_x\bar{u} + I_y\bar{v} + I_t)}{I_x^2 + I_y^2 + \alpha}$
+
+  \quad 初始化$u, v$对所有x, y像素取值为0。根据以上公式进行迭代得到motion结果
 
   Lucas-Kanade Tracker
 
