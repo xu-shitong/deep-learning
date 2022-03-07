@@ -2778,9 +2778,9 @@ Optic Flow
 
   multi-scale Lucas-Kanade method：得到较大范围的移动
 
-  \quad 对图片up sampling：一层up sample对2x2区间取一像素，scale 编号由sampling最多scale至原图scale
+  \quad 对图片up sampling：一层up sample对2x2区间取一像素，scale 编号由sampling最少scale至原图scale
 
-  \quad 1. 从上一sampling 层**$l - 1$**中计算此层(u, v)：$u^l = 2u^{l-1}, v^l = 2v^{l-1}$
+  \quad 1. 从上一sampling 层$l - 1$中计算此层(u, v)：$u^l = 2u^{l-1}, v^l = 2v^{l-1}$
 
   \quad 2. 计算warped image：$I^l_{warped} = I^l(x + u, y + v, t+1)$
 
@@ -2828,19 +2828,19 @@ Optic Flow
 
   \quad 针对原图像I，移动后图像J
 
-  \quad 取(u, v)，使得将图像I按(u, v)方向移动后和J像素平方差之和最小
+  \quad 取一物体的锚框内像素(u, v)，使得将图像I按(u, v)方向移动后和J像素平方差之和最小
 
   \quad \quad 即$\min_{u, v}\sum_{(x, y) \in pixels}(I(x, y) - J(x + u, y + v))^2$
 
   \quad 求解：对u, v微分
 
-  \quad \quad $\frac{dE}{du} = 2\sum_{(x, y)}(I(x, y) - J(x + u, y  + v))\frac{d-J(x + u)}{du}$
+  \quad \quad $\frac{dE}{du} = 2\sum_{(x, y)}(I(x, y) - J(x + u, y + v))\frac{d-J}{du}|(x + u)$
 
-  \quad \quad \quad $ = -2\sum_{(x, y)}(I(x, y) - J(x + u, y  + v))\frac{J}{dx}$
+  \quad \quad \quad $ = -2\sum_{(x, y)}(I(x, y) - J(x + u, y + v))\frac{J}{dx}|(x + u)$
 
   \quad \quad \quad $ = -2\sum_{(x, y)}(I(x, y) - J(x, y) - \frac{dJ}{dx}u - \frac{dJ}{dy}v)\frac{J}{dx}$
 
-  \quad \quad \quad $ = -2\sum_{(x, y)}(-I_t - I_xu - I_yv)I_x$
+  \quad \quad \quad $ = -2\sum_{(x, y)}(-I_t - I_xu - I_yv)I_x$，(假设$\frac{dJ}{dx} \approx \frac{dI}{dx}$)
 
   \quad \quad \quad v公式同理：$ = -2\sum_{(x, y)}(-I_t - I_xu - I_yv)I_y$
 
@@ -2877,6 +2877,33 @@ Optic Flow
       I_xI_t \\
       I_yI_t
       \end{bmatrix}$\\
+  correlation filter method：
+
+  \quad 令原物体位置为template，移动后物体可能在的区域称search window
+
+  \quad template经过CNN得到特征，其中不通过全连接层。特征仍为多通道矩阵
+
+  \quad 对search window使用同一CNN得到特征。
+
+  \quad 将template的特征作为\textbf{互相关计算}的卷积核，和search window的特征得到卷积结果。
+  
+  \quad \quad 由于两特征通道数相同，结果仅有1通道，为一矩阵。
+
+  \quad \quad 结果称score map，其中值较大的区域即为可能的移动后物体位置
+
+  \quad \quad 可对特征进行卷积操作后做互相关计算，加入的卷积层参与学习。迁移学习时改变此卷积层
+
+  \quad 创建数据集：
+
+  \quad \quad 人为标注每一帧物体位置。
+  
+  \quad \quad 得到物体在search window相对位置，按比例缩放后将期望的score map中对应位置设为1，其余位置为-1
+  
+  tracking by detection：
+  
+  \quad 将目标检测的CNN中标签个数设为2，仅区分物体和背景
+  
+  \quad 迁移学习时仅改变最后全连接层\\
 Camera Model 
 
   已知物体函数表达式和2d图像，预测观测点位置
