@@ -229,7 +229,7 @@
 \noindent \textbf{向量求导定义}
 
   标量对向量求导：$\frac{ds}{d\textbf{v}} = \begin{bmatrix}
-    \frac{ds}{dv_0} & \frac{ds}{dv_1} & ... & \frac{ds}{dv_n}
+    \frac{ds}{dv_0} \\ \frac{ds}{dv_1} \\ ... \\ \frac{ds}{dv_n}
     \end{bmatrix}$
 
   向量对向量求导：$\frac{d\textbf{u}}{d\textbf{v}} = \begin{bmatrix}
@@ -237,10 +237,14 @@
     ... & ... & ... \\
     \frac{du_m}{dv_0} & ... & \frac{du_m}{dv_n}
     \end{bmatrix}$
+
+  对$z = xv = vx$，v为向量，z为标量\ 有：
+
+  \quad $\frac{dz}{dx} = v$
   
   对$z = Wx$有：
   
-  \quad $\frac{z}{x} = W$
+  \quad $\frac{dz}{dx} = W$
   
   \quad $\frac{dL}{dW} = \frac{dL}{dz}x$
 
@@ -2553,25 +2557,37 @@ Interest Point Detection
       0 & 1 & 0
       \end{bmatrix}$
 
-  \quad 合并Gaussian filter和求导操作：$\Delta (f * g) = f * \Delta g$，
+  \quad 合并Gaussian filter和求导操作：
   
-  \quad \quad $f$为输入图像，$g$为二维Gaussian 卷积函数
+  \quad \quad $f$为输入图像，$g$为二维Gaussian 卷积函数，$\Delta$ 为laplace operator
 
-  \quad \quad $ = f * (-\frac{1}{\pi\sigma^4}(1 - \frac{x^2 + y^2}{2\sigma^2})e^{-\frac{x^2 + y^2}{2\sigma^2}})$
+  \quad \quad $\Delta (f * g) = f * \Delta g$
 
-  \quad \quad 其中$\Delta g(x, y)$部分型如草帽，称Marr's wavelet
+  \quad \quad \quad $ = f * (-\frac{1}{\pi\sigma^4}(1 - \frac{x^2 + y^2}{2\sigma^2})e^{-\frac{x^2 + y^2}{2\sigma^2}})$
 
-  \quad **$LoG_{norm}(x, y, \sigma) = \sigma^2(I_{xx}(x, y, \sigma) + I_{yy}(x, y, \sigma))$**
+  \quad \quad 其中$\Delta g(x, y)$部分型如草帽，称Marr's wavelet。即为使用的卷积核$LoG$
+
+  \quad $LoG_{norm}(x, y, \sigma) = \sigma^2(I_{xx}(x, y, \sigma) + I_{yy}(x, y, \sigma))$
+
+  \quad \quad 其中$I_{xx}, I_{yy}$为gaussian 的二次求导
 
   Difference of Gaussian DoG
   
-  \quad $DoG(x, y, \sigma) = I * g(k\sigma) - I * G(\sigma)$
+  \quad $DoG(x, y, \sigma) = I * G(k\sigma) - I * G(\sigma)$
   
-  \quad \quad $g(\sigma)$为使用$\sigma$的二维Gaussian卷积函数
+  \quad \quad $G(\sigma)$为使用$\sigma$的二维Gaussian卷积函数
 
   \quad \quad 即使用两不同$\sigma$Gaussian 卷积核计算输出相减
+
+  \quad \quad 卷积核为$G(k\sigma) - G(\sigma)$，由于卷积有分配率
   
-  \quad **$DoG(x, y, \sigma) \approx (k - 1)\sigma^2 \Delta^2 (G(x, y, \sigma))$**\\
+  \quad $DoG(x, y, \sigma) \approx (k - 1)\sigma^2 \Delta^2 (G(x, y, \sigma))$
+  
+  \quad \quad 证明：给定$\frac{dG}{d\sigma} \approx \frac{G(k\sigma) - G(\sigma)}{k\sigma - \sigma}$, $DoG(x, y, \sigma) = G(k\sigma) - G(\sigma)$
+
+  \quad \quad \quad $ = \frac{DoG(x, y, \sigma)}{(k - 1) \sigma}$
+  
+  \quad \quad \quad 则$DoG(x, y, \sigma) \approx (k - 1)\sigma^2\Delta G(x, y, \sigma)$\\
 Feature Description
 
   根据descriptor将不同图像上的像素对应
@@ -2867,11 +2883,11 @@ Optic Flow
       v
       \end{bmatrix}
     = 
-    \sum_{(x, y)}
+    -(\sum_{(x, y)}
     \begin{bmatrix}
       I_x^2 & I_xI_y \\
       I_xI_y & I_y^2
-      \end{bmatrix}^{-1}
+      \end{bmatrix})^{-1}
     \sum_{(x, y)}
     \begin{bmatrix}
       I_xI_t \\
