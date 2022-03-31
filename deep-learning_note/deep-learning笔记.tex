@@ -1820,9 +1820,9 @@
 
   Masked multi-head self-attention：
 
-  \quad 每一head权重部分$\frac{QK^T}{\sqrt{d_h}}$按元素相乘三角矩阵，三角矩阵中上三角为负常数，常取$-10^9$。
-
-  \quad \quad 目的：softmax后使得$i$位置的词仅能和$[0, i]$范围内的词计算attention
+  \quad 若mask一位置为否，每一head权重部分$\frac{QK^T}{\sqrt{d_h}}$中对应位置设为负极大值，常取$-10^9$。
+  
+  \quad mask中上三角为负常数，目的为：softmax后使得$i$位置的词仅能和$[0, i]$范围内的词计算attention
 
   position-wise feed-forward network PWFFN：
 
@@ -1849,8 +1849,10 @@
   
   encoder部分：
 
-  \quad 定义source mask：形状同encoder输入词序。所有'<pad>'词对应位置权重为极低值，保证softmax后其余词和此词attention值近似为0。
-
+  \quad 定义source mask：形状(批量大小, 1, 时序长度)
+  
+  \quad \quad 所有'<pad>'词对应位置权重为极低值，保证softmax后其余词和此词attention值近似为0。
+  
   \quad \textbf{encoder layer：包含两残差块}
 
   \quad \quad 输入为(批量大小, 时序长度, 词向量长度)，在以下操作间形状不变
@@ -1877,11 +1879,13 @@
 
   decoder部分：
 
-  \quad 定义target mask：形状同decoder输入词序。
+  \quad 定义target mask：形状(批量大小, 时序长度, 时序长度)
   
   \quad \quad 所有'<pad>'位置权重设为极小值
 
-  \quad \quad **对每一T长度词序，分为$T \times T$个词序。第i号词序从i位置以后权重设为极低值，模拟逐词预测整个decoder输入词序**
+  \quad \quad 第i号词序从i位置以后权重设为极低值，模拟逐词预测整个decoder输入词序。即整个mask为三角矩阵，上三角全为负极大值
+
+  \quad \quad \textbf{对单一T长度词序mask时，使用广播机制，产生T个T长度词序。}
 
   \quad \textbf{decoder layer}：三层(残差块, 批量归一)，每一层残差块$f(x) - x$分别为以下部分
 
