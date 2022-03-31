@@ -1788,72 +1788,74 @@
   算法：使用KNN，寻找向量临近$v_b - v_a + v_c$\\
 \textbf{Transformer}
 
-  encoder部分：
+  self attention：使用词序中其余词代表一词
 
-  \quad self attention：使用词序中其余词代表一词
+  \quad 定义：
 
-  \quad \quad 定义：
+  \quad \quad $W^Q$：queries矩阵，$W^K$：keys矩阵，$W^V$：values矩阵
 
-  \quad \quad \quad $W^Q$：queries矩阵，$W^K$：keys矩阵，$W^V$：values矩阵
+  \quad \quad \quad 三矩阵$\in \mathbb{R}^{D \times d_h}$，参与反向传播
 
-  \quad \quad \quad \quad 三矩阵$\in \mathbb{R}^{D \times d_h}$，参与反向传播
+  \quad \quad \quad D为词向量长度，$d_h$为每一词query key value向量长度
 
-  \quad \quad \quad \quad D为词向量长度，$d_h$为每一词query key value向量长度
-
-  \quad \quad \quad $X \in \mathbb{R}^{T \times D}$为所有词向量vstack，T为时序长度。
+  \quad \quad $X \in \mathbb{R}^{T \times D}$为所有词向量vstack，T为时序长度。
   
-  \quad \quad \quad $Q = XW^Q$，$K = XW^K$，$V = XW^K$
+  \quad \quad $Q = XW^Q$，$K = XW^K$，$V = XW^K$
   
-  \quad \quad \quad 令词$i$有词向量$w_i$，则有query $W^Qw_i$，key $W^Kw_i$，value $W^Vw_i$
+  \quad \quad 令词$i$有词向量$w_i$，则有query $W^Qw_i$，key $W^Kw_i$，value $W^Vw_i$
 
-  \quad \quad self-attention值：$Z \in \mathbb{R}^{T \times d_h}= softmax(\frac{QK^T}{\sqrt{d_h}}) V$
+  \quad self-attention值：$Z \in \mathbb{R}^{T \times d_h}= softmax(\frac{QK^T}{\sqrt{d_h}}) V$
 
-  \quad \quad \quad 对一词$i$计算中，将其query值与所有其余词的key值点乘\ 除以$\sqrt{d_h}$\ 经过softmax，作为其余词和词$i$的相似度
+  \quad \quad 对一词$i$计算中，将其query值与所有其余词的key值点乘\ 除以$\sqrt{d_h}$\ 经过softmax，作为其余词和词$i$的相似度
 
-  \quad \quad \quad 除以$\sqrt{d_h}$，用于减小softmax后的peak
+  \quad \quad 除以$\sqrt{d_h}$，用于减小softmax后的peak
 
-  \quad \quad \quad 相似度做为权重，求value的加权平均值
+  \quad \quad 相似度做为权重，求value的加权平均值
 
-  \quad Multi-head self-attention：
+  Multi-head self-attention：
 
-  \quad \quad 使用head$H$组$W^Q, W^K, W^V \in \mathbb{R}^{D / H \times d_h}$。
+  \quad 使用head$H$组$W^Q, W^K, W^V \in \mathbb{R}^{D / H \times d_h}$。
 
-  \quad \quad 输出的H组$Z_i$连接后经过全连接层，张量形状$(T, d_h)$不变
+  \quad 输出的H组$Z_i$连接后经过全连接层，张量形状$(T, d_h)$不变
 
-  \quad Masked multi-head self-attention：
+  Masked multi-head self-attention：
 
-  \quad \quad 每一head权重部分$\frac{QK^T}{\sqrt{d_h}}$按元素相乘三角矩阵，三角矩阵中上三角为负常数，常取$-10^9$。
+  \quad 每一head权重部分$\frac{QK^T}{\sqrt{d_h}}$按元素相乘三角矩阵，三角矩阵中上三角为负常数，常取$-10^9$。
 
-  \quad \quad \quad 目的：softmax后使得$i$位置的词仅能和$[0, i]$范围内的词计算attention
+  \quad \quad 目的：softmax后使得$i$位置的词仅能和$[0, i]$范围内的词计算attention
 
-  \quad position-wise feed-forward network PWFFN：
+  position-wise feed-forward network PWFFN：
 
-  \quad \quad $FNN(X) = ReLU(XW_1 + b_1)W_2 + b_2$，其中$W_1 \in \mathbb{R}^{D \times d_{ff}}, W_2 \in \mathbb{R}^{d_{ff} \times D}$
+  \quad $FNN(X) = ReLU(XW_1 + b_1)W_2 + b_2$，其中$W_1 \in \mathbb{R}^{D \times d_{ff}}, W_2 \in \mathbb{R}^{d_{ff} \times D}$
 
-  \quad \quad 即两层全连接层，由ReLU + dropout连接。层间使用$d_{ff}$长度向量代表信息，$d_{ff}$常取2048
+  \quad 即两层全连接层，由ReLU + dropout连接。层间使用$d_{ff}$长度向量代表信息，$d_{ff}$常取2048
 
-  \quad \quad 称position-wise，由于每一词$\in \mathbb{R}^D$使用相同权重
+  \quad 称position-wise，由于每一词$\in \mathbb{R}^D$使用相同权重
 
-  \quad Positional encoding：对词在句中位置进行编码，使transformer类似RNN有时序性
+  Positional encoding：对词在句中位置进行编码，使transformer类似RNN有时序性
   
-  \quad \quad PE matrix$\in \mathbb{R}^{maxT, D}$
+  \quad PE matrix$\in \mathbb{R}^{maxT, D}$
   
-  \quad \quad \quad \begin{equation*}
+  \quad \quad \begin{equation*}
       PE_{pos, i} = \begin{cases}
       \sin(\frac{pos}{10000^{\frac{i}{d}}}) & even(i)\\
       \cos(\frac{pos}{10000^{\frac{i}{d}}}) & odd(i)
       \end{cases}
     \end{equation*}
     
-  \quad \quad \quad maxT为最大可能的词序长度，D为词向量长度
+  \quad \quad maxT为最大可能的词序长度，D为词向量长度
   
-  \quad \quad \quad 前向传播时对T长度的词序(Batch\_size, T, D)，按元素相加PE[:T]矩阵，输出张量形状仍为(Batch\_size, T, D)
+  \quad \quad 前向传播时对T长度的词序(Batch\_size, T, D)，按元素相加PE[:T]矩阵，输出张量形状仍为(Batch\_size, T, D)
   
+  encoder部分：
+
+  \quad 定义source mask：形状同encoder输入词序。所有'<pad>'词对应位置权重为极低值，保证softmax后其余词和此词attention值近似为0。
+
   \quad \textbf{encoder layer：包含两残差块}
 
   \quad \quad 输入为(批量大小, 时序长度, 词向量长度)，在以下操作间形状不变
 
-  \quad \quad 1. 第一残差块$f(x) - x$对应self-attention输出。$x$部分为原输入不变
+  \quad \quad 1. 第一残差块$f(x) - x$为multi-head self-attention输出，使用source mask。$x$部分为原输入不变
   
   \quad \quad 2. 残差块输出通过批量归一层
 
@@ -1875,39 +1877,57 @@
 
   decoder部分：
 
+  \quad 定义target mask：形状同decoder输入词序。
+  
+  \quad \quad 所有'<pad>'位置权重设为极小值
+
+  \quad \quad **对每一T长度词序，分为$T \times T$个词序。第i号词序从i位置以后权重设为极低值，模拟逐词预测整个decoder输入词序**
+
   \quad \textbf{decoder layer}：三层(残差块, 批量归一)，每一层残差块$f(x) - x$分别为以下部分
 
-  \quad \quad 1. multi-head self-attention：
+  \quad \quad 1. masked multi-head self-attention：
   
-  \quad \quad \quad 使用mask，$QKV$计算中使用同一X，即上一decoder layer输出\ 或词向量 + Position embedding结果 
+  \quad \quad \quad 使用target mask，$QKV$计算中使用同一X，即上一decoder layer输出\ 或词向量 + Position embedding结果 
   
-  \quad \quad 2. Masked multi-head self-attention：
+  \quad \quad 2. masked multi-head self-attention：
+
+  \quad \quad \quad 使用source mask
   
   \quad \quad \quad $Q = XW^Q$中X为1.的输出
   
-  \quad \quad \quad $K = XW^K$，$V = XW^K$中X为encoder输出，不同decoder layer使用相同\ 唯一的encoder输出
+  \quad \quad \quad $K = XW^K$，$V = XW^K$中X为encoder输出，\textbf{不同decoder layer使用相同\ 唯一的encoder输出}
 
   \quad \quad 3. PWFFN
 
   \quad \textbf{decoder结构}
 
-  \quad \quad 
+  \quad \quad 1. embedding，position encoding。同encoder
+
+  \quad \quad 2. 多层decoder layer。\textbf{层数无需同encoder层数}
   
 \textbf{BERT}
 
   输入为两词序连接后的一整词序
 
-  pre-training：由Input Embedding得到输入，输出为NSP和MLM连接结果
+  pre-training：由Input Embedding得到输入，输出为NSP和MLM连接结果。填充'<pad>'使得所有词序长度相同
 
-  \quad Input Embedding：将词转为词向量，和Position encoding，segment embedding按元素相加
+  \quad Input Embedding：为以下3项按元素相加
   
+  \quad \quad token embedding：转为词向量。
+
+  \quad \quad segment embedding：区分两输入的词序，前句segment embedding为0，后句为1。
+
+  \quad \quad position embedding：在训练时更新\textbf{不同于encoder部分position embedding}
+
   \quad Masked Language Model MLM
   
   \quad \quad 更改文本中15\%的词：其中80\%的情况词被掩盖，替换为[MASK]。10\%的情况替换为任意词，10\%的情况不更改词
+
+  \quad \quad 目标为改正所有被更改的词。由于不知道哪些词被更改，\textbf{每一输入词都为可更改的词。}
   
   \quad Next Sentence Prediction NSP：
   
-  \quad \quad \\
+  \quad \quad 一binary输出，判断输入两句是否为上下文关系\\
 \textbf{二. 文本情感分类}
 
   分析文本作者的情感
@@ -2423,21 +2443,25 @@ Hough transformation：
 
   将边界检测图像结果转换为边界的函数表达式，允许有多个边界表达式
 
+  算法：
+
+  \quad 1. 对每一边界像素(x, y)值带入边界函数作为系数。
+
+  \quad 2. 在函数的parameter space中，将参数(m, b, r, ...)取值范围分为网格。
+
+  \quad 3. 将1.中所有经过的grid 权重 + 1。多函数经过同一gird时权重叠加
+
+  \quad 4. 最终权重大于一threshould\ 并为8临近grid local maximum的(m, b)点为一边界函数参数。
+  
   \quad slope intercept form：$y = mx + b$
 
-  \quad \quad 求解：每一边界像素(p, q)对应$q = mp + b$对应一m-b函数表达式
+  \quad \quad 求解：参数为m, b。在1.中使用的边界函数为$b = y - mx$
 
-  \quad \quad \quad 在parameter space m-b中，将m，b取值范围分为网格
-
-  \quad \quad \quad 对所有m-b函数，每一函数经过的grid分配一权重。多函数经过同一gird时权重叠加
-  
-  \quad \quad \quad 最终权重大于一threshould的(m, b)点为一边界。
-
-  \quad double intercept form：$\frac{x}{a} + \frac{y}{b} = 1$。即椭圆
+  \quad double intercept form：$\frac{x}{a} + \frac{y}{b} = 1$
 
   \quad normal form：$x\cos(\theta) + y\sin(\theta) = \rho$
 
-  \quad \quad 求解：同slope intercept，函数为$\theta$-$\rho$
+  \quad \quad 参数为$\theta$, $\rho$
 
   \quad \quad 相较slope intercept form取值范围有限，易于定义grid
 
@@ -2449,7 +2473,7 @@ Hough transformation：
   
   \quad \quad \quad 对每一可能的r值求$a = x - r\cos(\theta)$, $b = y - r\sin(\theta)$，$\theta$取像素(x, y)位置的角度
 
-  \quad \quad \quad 对(a, b, r)位置的权重+1，最终选择一组(a, b, r)使得权重高于一threshould\\
+  \quad \quad \quad 对(a, b, r)位置的权重+1，最终选择一组(a, b, r)使得权重高于一threshould\ 并为8临近grid local maximum\\
 Interest Point Detection 
 
   image matching：将两张图中像素对应，如图片连接。为一种interest point detection 
@@ -2474,7 +2498,7 @@ Interest Point Detection
 
   \quad \quad $I(x + u, y + v) = I(x, y) + uI_x(x, y) + vI_y(x, y)$
 
-  \quad \quad \quad $I_x, I_y$为图像在x, y位置的斜率**即$g_x, g_y$**
+  \quad \quad \quad $I_x, I_y$为图像在x, y位置的斜率
 
   \quad \quad 带入得$E(u, v) = [u, v]\sum_{(x, y) \in W}w(x, y)
     \begin{bmatrix}
@@ -2498,7 +2522,7 @@ Interest Point Detection
       0 & \lambda_2
       \end{bmatrix} P^T$
 
-  \quad \quad \quad 当$M$为全零矩阵/$\lambda_1,\lambda_2 \sim 0$时，**(u, v)或(x, y)**不在边界
+  \quad \quad \quad 当$M$为全零矩阵/$\lambda_1,\lambda_2 \sim 0$时，(x, y)不在边界
 
   \quad \quad \quad 当$M_{00} >> M_{11}$/$\lambda_1 >> \lambda_2$，在竖直edge上
 
@@ -2696,9 +2720,9 @@ Feature Description
   
   Speeded-Up Robust Feature SRUF：feature descriptor
 
-  \quad Haar wavelets：包含2 * (2, )向量，分别为$d_h = [-1, 1], d_v = [-1, 1]^T$。 **形状为(2, 2)或(4, 4)，元素为1/-1的矩阵**N
+  \quad Haar wavelets：包含2 * (2, )向量，分别为$d_h = [-1, 1], d_v = [-1, 1]^T$。 
   
-  \quad 将采样点**周围像素**值和Haar wavelets按元素相乘求和，得到仅在水平/竖直方向取斜率$d_h, d_v$，
+  \quad 将采样点周围像素值和Haar wavelets按元素相乘求和，得到仅在水平/竖直方向斜率$d_h, d_v$，
 
   \quad \textbf{一采样点}descriptor：$(\sum d_h, \sum d_v, \sum |d_h|, \sum |d_v|)$
 
