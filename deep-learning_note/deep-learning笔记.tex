@@ -1820,6 +1820,8 @@
 
   Masked multi-head self-attention：
 
+  \quad 基于multi-head self-attention
+
   \quad 若mask一位置为否，每一head权重部分$\frac{QK^T}{\sqrt{d_h}}$中对应位置设为负极大值，常取$-10^9$。
   
   \quad mask中上三角为负常数，目的为：softmax后使得$i$位置的词仅能和$[0, i]$范围内的词计算attention
@@ -1905,9 +1907,15 @@
 
   \quad \textbf{decoder结构}
 
-  \quad \quad 1. embedding，position encoding。同encoder
+  \quad \quad 1. 得到(1..T-1)词序。经过embedding，position encoding层。
 
   \quad \quad 2. 多层decoder layer。\textbf{层数无需同encoder层数}
+
+  训练：
+
+  \quad source词序经过encoder得到输出。target词序取(1..T-1)长度经过decoder，过程中使用encoder输出。
+
+  \quad decoder输出经过全连接层得到预测的下一词编号，和期望的target词序使用softmax cross entropy计算代价
   
 \textbf{BERT}
 
@@ -1931,7 +1939,9 @@
   
   \quad Next Sentence Prediction NSP：
   
-  \quad \quad 一binary输出，判断输入两句是否为上下文关系\\
+  \quad \quad 一binary输出，判断输入两句是否为上下文关系
+  
+  BERT为semi supervised learning，在较大无标签数据集上训练，在有标签数据集fine tune实现具体任务\\
 \textbf{二. 文本情感分类}
 
   分析文本作者的情感
