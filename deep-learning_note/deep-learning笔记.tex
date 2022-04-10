@@ -1453,7 +1453,9 @@
 
   \quad \quad \quad 2.计算$X$的Gram matrix, $XX^T$。元素$(XX^T)_{ij}$即$x_i \cdot x_j$，代表通道i和j的相关性。可对Gram matrix每一元素先除以$|X|$元素值，避免样式损失值过高
 
-  \quad \quad \quad 3.传入内容图像\ 合成图像，对每一样式层输出做平均平方代价函数，每层代价相加为总样式损失值
+  \quad \quad \quad \textbf{即将$c$通道的矩阵两两按元素相乘\ 求和，得到$c \times c$矩阵}
+
+  \quad \quad \quad 3.传入样式图像\ 合成图像，对每一样式层输出计算Gram matrix的平均平方代价函数，每层代价相加为总样式损失值
 
   \quad \textbf{总变差损失}：
 
@@ -1804,6 +1806,8 @@
   
   \quad \quad 令词$i$有词向量$w_i$，则有query $W^Qw_i$，key $W^Kw_i$，value $W^Vw_i$
 
+  \quad \quad \quad \textbf{由于全部使用同一向量$w_i$，为词向量$w_i$对自身的attention，所以称self attention。$w_i$取不同值时为广义attention}
+
   \quad self-attention值：$Z \in \mathbb{R}^{T \times d_h}= softmax(\frac{QK^T}{\sqrt{d_h}}) V$
 
   \quad \quad 对一词$i$计算中，将其query值与所有其余词的key值点乘\ 除以$\sqrt{d_h}$\ 经过softmax，作为其余词和词$i$的相似度
@@ -1814,9 +1818,13 @@
 
   Multi-head self-attention：
 
-  \quad 使用head$H$组$W^Q, W^K, W^V \in \mathbb{R}^{D / H \times d_h}$。
+  \quad 使用head\ H组$W^Q, W^K, W^V \in \mathbb{R}^{D / H \times d_h}$。
 
-  \quad 输出的H组$Z_i$连接后经过全连接层，张量形状$(T, d_h)$不变
+  \quad 1. 输入词向量$w_q, w_k, w_v$分别经过3全连接层，得到的3向量各分为H段。即结果为H组$w_q, w_k, w_v$
+  
+  \quad 2. 1.中第i组$w_q, w_k, w_v$分别和第i组矩阵$W^Q, W^K, W^V$相称，得$w_qW^Q$，$w_kW^K$，$w_vW^K$。
+
+  \quad 3. 得到的输出连接后经过另一全连接层，做最终multi head输出。张量形状$(T, d_h)$不变
 
   Masked multi-head self-attention：
 
@@ -1877,7 +1885,7 @@
 
   \quad \quad 3. 多层encoder layer
 
-  \quad \quad 最终encoder输出结果为多层encoder layer最终输出
+  \quad \quad 最终encoder输出结果为最后一层encoder layer输出
 
   decoder部分：
 
@@ -1915,11 +1923,10 @@
 
   \quad source词序经过encoder得到输出。target词序取(1..T-1)长度经过decoder，过程中使用encoder输出。
 
-  \quad decoder输出经过全连接层得到预测的下一词编号，和期望的target词序使用softmax cross entropy计算代价
-  
+  \quad decoder输出经过全连接层得到预测的下一词编号，和期望的target词序使用softmax cross entropy计算代价\\
 \textbf{BERT}
 
-  输入为两词序连接后的一整词序
+  输入为两词序连接后的一整词序，当输入仅有一词序时segment embedding为全0
 
   pre-training：由Input Embedding得到输入，输出为NSP和MLM连接结果。填充'<pad>'使得所有词序长度相同
 
@@ -1929,7 +1936,7 @@
 
   \quad \quad segment embedding：区分两输入的词序，前句segment embedding为0，后句为1。
 
-  \quad \quad position embedding：在训练时更新\textbf{不同于encoder部分position embedding}
+  \quad \quad position embedding：\textbf{随机初始化，训练时更新}
 
   \quad Masked Language Model MLM
   
