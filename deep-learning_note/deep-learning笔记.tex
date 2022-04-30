@@ -1845,11 +1845,19 @@
 
   \quad \quad softmax后可加dropout。
 
+  广义attention：
+
+  \quad \textbf{$K, V$时间维度长度相同，由于每一key对应一value。$K, Q$特征维度长度相同，由于对每一query需和每一key点乘得到相似度}
+
+  \quad \textbf{$d_h$使用$Q$特征维度长度}
+
   Multi-head self-attention：
 
   \quad 1. 输入$w_q, w_k, w_v$分别经过3全连接层，得到3个(D, $d_h$)形状结果。结果各分为H段。即结果为$3 \times H$组(D, $d_h$ / H)结果
 
   \quad 2. 所有1.中同一组输出的$Q, K, V \in \mathbb{R}^{T \times d_h / H}$计算attention，得到$H$个$(T, d_h / H)$张量结果。
+
+  \quad \quad \textbf{此处$Q, K, V$为已经和$W^Q, W^K, W^V$相乘后矩阵}
 
   \quad 3. 2.中输出连接后经过另一全连接层，做最终multi head输出。张量形状$(T, d_h)$不变
 
