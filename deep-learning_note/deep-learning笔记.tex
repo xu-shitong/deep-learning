@@ -19,7 +19,8 @@
 % --------------------------------------------------------------------------
 \section{基本定义}
 
-\noindent \textbf{label标签}：输出结果，$\hat{y} $为计算得到的结果，$y$为实际测量结果\\
+\noindent \textbf{深度学习}：得到数据深度的特征，不一定使用神经网络\\
+\textbf{label标签}：输出结果，$\hat{y} $为计算得到的结果，$y$为实际测量结果\\
 \textbf{feature特征}：用于预测标签的输入变量，$x^{(i)}_j$为第i组sample第j号特征\\
 \textbf{sample样本}：一组特征的取值和对应的标签输出\\
 \textbf{batch}：batch size个sample被分为一组，进行向量化的计算，称$B$\\
@@ -1935,7 +1936,7 @@
 
   \quad \textbf{encode结构}：
 
-  \quad \quad 1. embedding，将词序转为词向量
+  \quad \quad 1. embedding，将词序转为词向量。embedding参数形状(词典大小，词向量长度)
 
   \quad \quad 2. position encoding层
 
@@ -2005,6 +2006,10 @@
   \quad \quad 目标为改正所有被更改的词。由于不知道哪些词被更改，\textbf{每一输入词都为可更改的词。}
 
   \quad \quad 计算代价值时仅取被mask的词求代价值。输出为词one\_hot，非词向量
+
+  \quad \quad 输出预测时每一词序位置输出通过同一MLP(全连接 + ReLU + layer norm + 全连接)得到输出。
+  
+  \quad \quad \quad 输出为词典大小向量，代价函数为输出向量softmax和目标词的onehot交叉熵
   
   \quad Next Sentence Prediction NSP：
   
@@ -2012,7 +2017,9 @@
 
   \quad \quad 直接将对应<cls>位置的输出传入全连接层，得到binary 输出
   
-  BERT为semi supervised learning，在较大无标签数据集上训练，在有标签数据集fine tune实现具体任务\\
+  BERT为semi supervised learning，在较大无标签数据集上训练，在有标签数据集fine tune实现具体任务
+  
+  evaluate时使用BLEU判断翻译准确度\\
 \textbf{二. 文本情感分类}
 
   分析文本作者的情感
