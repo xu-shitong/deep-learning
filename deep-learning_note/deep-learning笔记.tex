@@ -202,7 +202,54 @@
 
   Theorem：u为一S的stationary point
   
-  \quad iff $\frac{L(t, u(t), u'(t))}{du} - \frac{L(t, u(t), u'(t))}{d(u'(t))dt} = 0$
+  \quad iff $\frac{L(t, u(t), u'(t))}{du} - \frac{L(t, u(t), u'(t))}{d(u'(t))dt} = 0$\\
+\textbf{bias variance}
+
+  定义：
+
+  \quad 实际数据模型为f，样本集合为\{$x_i, y_i$\}，训练得到模型为$\hat{f}$。
+  
+  \quad \quad 有$y_i = f(x_i) + \epsilon$，$\epsilon$为噪声，有variance $\sigma^2$ 均值为0
+
+  \quad 令$f(x), \hat{f}(x)$简写为$f, \hat{f}$
+
+  \quad $\hat{f}$和f间MSE $E[(y - \hat{f})^2] = E[((f - E[\hat{f}]) + \epsilon - (\hat{f} - E[\hat{f}]))^2]$
+
+  \quad \quad $ = (f - E[\hat{f}])^2 + E[\epsilon^2] + E[(\hat{f} - E[\hat{f}])^2]$
+
+  \quad \quad $ = Bias^2 + Var^2 + \sigma^2$
+
+  \quad \quad 假设$\epsilon$，Bias，Variance间independent。交叉项乘积全部为0\\
+\textbf{Bagging}
+
+  从Bootstrap Aggregating得名
+
+  算法：
+
+  \quad 同时训练n个模型，最终输出为n个模型的平均值
+
+  \quad 每一模型训练集为总训练集上bootstraping采样结果
+
+  \quad \quad bootstraping采样：从m大小的数据集上随机选取m大小数据集，样本可重复
+
+  \quad \quad 验证集为bootstraping没有采样的样本
+
+  bagging降低方差，不降低偏差。方差较大时bagging降方差更加明显，方差较大模型不稳定
+
+  证明降低方差：
+  
+  \quad 令每一模型函数为$h$，合并结果$\hat{f}(x) = E[h(x)]$。由$E[x]^2 \leq E(x^2)$
+
+  \quad 真实模型函数为f，为固定函数，非变量
+  
+  \quad $(E[f - \hat{f}])^2 \leq E[(f - h)^2]$
+
+  \quad $(E[f - E[h]])^2 \leq E[(f - h)^2]$
+
+  \quad $f^2 - 2fE[h] + E[h]^2 \leq f^2 - 2fE[h] + E[h^2]$
+
+  \quad $E[h]^2 \leq E[h^2]$
+
 
 % --------------------------------------------------------------------------
 % |                           perceptron 分类算法                           |
@@ -1976,7 +2023,9 @@
 
   \quad \quad 2. 多层decoder layer。\textbf{层数无需同encoder层数}
 
-  \quad \quad 3. 全连接层，使用2.数据预测单独输出词
+  \quad \quad 3. 全连接层，对每一decoder特征进行全连接。即\textbf{能够输出所有词序的词，并非只能输出单一词}。
+
+  \quad \quad \quad 在翻译任务中由于只能基于前次预测结果预测下一词，仍为auto regressive
 
   训练：
 
@@ -2381,9 +2430,9 @@
 
   relative entropy $D_{KL}(P \| Q) = E_{x \sim P}(log(\frac{p(x)}{q(x)}))$
 
-  \quad 当$p(x) < q(x)$，$log(\frac{p(x)}{q(x)}))$为负值，绝对值较大
+  \quad 当$p(x) << q(x)$，$log(\frac{p(x)}{q(x)}))$为负值，绝对值较大
   
-  \quad 当$p(x) > q(x)$，$log(\frac{p(x)}{q(x)}))$为正值，绝对值较大
+  \quad 当$p(x) >> q(x)$，$log(\frac{p(x)}{q(x)}))$为正值，绝对值较大
 
   性质：
 
