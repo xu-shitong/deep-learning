@@ -232,7 +232,7 @@
 
   \quad \quad bootstraping采样：从m大小的数据集上随机选取m大小数据集，样本可重复
 
-  \quad \quad 验证集为bootstraping没有采样的样本
+  \quad \quad 验证集out-off-bag oob 样本：当使用bagging选取时，平均只有$1-e^{-1}$样本被选择，余下样本称oob样本，为验证集
 
   bagging降低方差，不降低偏差。方差较大时bagging降方差更加明显，方差较大模型不稳定
 
@@ -250,25 +250,32 @@
 
   \quad $E[h]^2 \leq E[h^2]$
 
+  针对决策树变化：
 
-% --------------------------------------------------------------------------
-% |                           perceptron 分类算法                           |
-% --------------------------------------------------------------------------
-\section{perceptron 分类算法}
-\noindent \textbf{前向传播}
-
-  $\hat{y} = h(W^Tx + b)$
+  \quad random patches随机贴片：对特征和训练集同时取子集进行训练
   
-  激活函数h(x)
-
-  \quad 当$x > 0$时$h(x) = 1$
-
-  \quad 当$x \leq 0$时$h(x) = 0$\\
-\textbf{迭代}
-
-  $\theta_i = \theta_i + \alpha(y - h(x))x_i$
+  \quad random subspace随机子空间：对特征取子集，对整个总训练集进行训练
   
-  \quad $\alpha$为学习率
+  \quad extra-trees极度随机森林：'使用随机$t_k$而不使用最小化数据混杂度的$t_k$'
+  
+  \quad $k$feature importance特征重要性：对所有取$k$为判断条件的节点$N_i$，计算加权平均值$\sum_i(S_i$熵增百分比$)$\\
+\textbf{boosting}
+
+  将多个较弱模型合并为较强模型，每一模型使用之前模型预测效果较差样本作为训练集
+
+  \quad AdaBoost：对上一预测机制遗漏的样本加更高权重，进行训练
+
+  \quad gradient boosting：
+
+  \quad \quad 第t时间合并的模型称$H_t$
+  
+  \quad \quad 第t模型$h_t$使用训练集$\{x_i, y_i - H_{t-1}(x_i)\}$，随后更新总模型$H_t = h_t + \eta h_t$
+
+  \quad \quad 模型应使用regularization，否则较强模型导致拟合整个训练集
+
+  决策树使用boosting：合并多模型即不同决策树输出取加权平均值
+
+  \quad 训练sequential，耗时长，使用XGBoost lightGBM减少训练时间
 
 % --------------------------------------------------------------------------
 % |                            反向传播公式推导                              |
