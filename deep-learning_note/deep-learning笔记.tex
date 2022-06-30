@@ -261,7 +261,7 @@
   \quad $k$feature importance特征重要性：对所有取$k$为判断条件的节点$N_i$，计算加权平均值$\sum_i(S_i$熵增百分比$)$\\
 \textbf{boosting}
 
-  将多个较弱模型合并为较强模型，每一模型使用之前模型预测效果较差样本作为训练集
+  将多个较弱模型合并为较强模型，每一模型使用之前模型预测效果较差样本作为训练集。降低偏差
 
   \quad AdaBoost：对上一预测机制遗漏的样本加更高权重，进行训练
 
@@ -275,7 +275,24 @@
 
   决策树使用boosting：合并多模型即不同决策树输出取加权平均值
 
-  \quad 训练sequential，耗时长，使用XGBoost lightGBM减少训练时间
+  \quad 训练sequential，耗时长，使用XGBoost lightGBM减少训练时间\\
+\textbf{stacking}
+
+  同一样本经过不同模型，输出连接后经过全连接层。降低方差
+
+  multi stacking：
+  
+  \quad 多层stacking，每层输入为样本/前层连接结果
+
+  \quad 易于overfitting，由于单层特征stacking已经为强模型
+
+  \quad \quad 每层训练使用不同数据集。不同层通常使用相同模型，相同超参数，不共享权重
+
+  \quad \quad \quad \textbf{训练第i层时使用第i训练集，输入为i训练集经过前层输出(不经过全连接层)，输出连接后经过全连接层进行预测}
+
+  \quad \quad \quad \textbf{可对不同层输出预测取平均，降低偏差}
+
+  \quad \quad 可使用k-fold创建不同层样本
 
 % --------------------------------------------------------------------------
 % |                            反向传播公式推导                              |
