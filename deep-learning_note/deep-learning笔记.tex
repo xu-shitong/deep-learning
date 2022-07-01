@@ -292,7 +292,25 @@
 
   \quad \quad \quad \textbf{可对不同层输出预测取平均，降低偏差}
 
-  \quad \quad 可使用k-fold创建不同层样本
+  \quad \quad 可使用k-fold创建不同层样本\\
+\textbf{Neural Architecture Search搜索神经网络结构}
+
+  使用RNN生成定义网络结构的文本。类似强化学习，环境即数据集，决策即网络结构
+
+  One shot approach：训练极大模型，包含所有想要验证的模型
+
+  \quad Differentiable Architecture Search：多层categorical search，每层包含多个不同超参数模型 + softmax
+
+  \quad \quad softmax对每一模型输出加权平均，\textbf{输入的权重为可学习参数}
+
+  \quad \quad 训练时输出为层中模型结果加权平均，预测时仅选择权重最大的唯一模型计算输出
+
+  \quad \quad 由于权重可学习，称differentiable
+
+  \quad DARTS
+
+  Scaling CNN：efficientNet调整CNN参数时满足固定关系
+
 
 % --------------------------------------------------------------------------
 % |                            反向传播公式推导                              |
@@ -2091,6 +2109,8 @@
   \quad \quad 直接将对应<cls>位置的输出传入全连接层，得到binary 输出
   
   BERT为semi supervised learning，在较大无标签数据集上训练，在有标签数据集fine tune实现具体任务
+
+  \quad 在小数据集上微调BERT效果不稳定，由于1.原BERT使用的adam删除了bias correction 步骤，实际使用完整BERT。2. 增加微调epoch数
   
   evaluate时使用BLEU判断翻译准确度\\
 \textbf{二. 文本情感分类}
