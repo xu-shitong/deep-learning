@@ -39,8 +39,9 @@
   平均值在0，允许输出为负值，帮助converge。计算开销较大
   
   多层tanh或sigmoid都将降低学习效率\\
-\textbf{softmax函数}：$softmax(Y) = \frac{exp(y)}{\sum_{y' \in Y} exp(y') } $，将数值输出转化为概率值，1. 值为正\ 2. 值总和为1\\
-\textbf{ReLU}
+\textbf{softmin}：$softmax(X) = \frac{exp(-x)}{\sum_{x' \in X} exp(-x') }$\\
+\textbf{softmax函数}：$softmax(X) = \frac{exp(x)}{\sum_{x' \in X} exp(x') } $，将数值输出转化为概率值，1. 值为正\ 2. 值总和为1\\
+\textbf{ReLU} 激活函数
 
   仅有一半neuron activate，前向计算更快速。dying relu problem：relu值为0导致权重不被更新\\
 \textbf{Parapetric ReLU}：
@@ -65,7 +66,9 @@
     \end{cases}
   \end{equation*}
   
-  形状从-1增长到0，随后线性。\\
+  形状\ 从-1 按exp(x)增长到0，随后线性。\textbf{a从0增大时$x \leq 0$包含更大部分的exp图像，值$ > -\alpha$}
+  
+  \textbf{仅在$\alpha = 1$时continuously differentiable}\\
 \textbf{CELU}
 
   \begin{equation*}
@@ -75,10 +78,14 @@
     \end{cases}
   \end{equation*}
 
-  相对ELU对x除超参数$a$\\
+  相对ELU对x除超参数$\alpha$。
+  
+  \textbf{a从0增大时图像$x \leq 0$近似linear部分逐渐增大\ 增长变平缓，值$ > -\alpha$}
+
+  \textbf{当a不为1时求导为continuous function 即continuously differentiable}\\
 \textbf{SELU}
 
-  $SELU(x) = scale * ELU$
+  $SELU(x) = scale * ELU, scale > 1$
 
   self normalizing：当每层激活函数使用internal normalizing函数时，最终的特征mean variance converge到一定值
 
@@ -94,7 +101,6 @@
   $GELU(x) = x \Phi(x)$
 
   $\Phi$为Gaussian的CDF。图像形状为在0附近有小幅降低后linear升高\\
-\textbf{LogSigmoid}：$\log(sigmoid(x))$形状约到x=2时线性上升到0，随后水平\\
 \textbf{SoftPlus激活函数}：
 
   $SoftPlus(x) = \frac{1}{\beta} \log(1 + exp(\beta x))$
@@ -102,9 +108,16 @@
   形如exp，拐点连续可导。当$\beta$增大时，接近ReLU
 
   为保证Numerical stability，当$\beta x > $阈值时，改用线性激活函数\\
-\textbf{catagorical cross entropy交叉熵}
+\textbf{LogSigmoid代价函数}：$\log(sigmoid(x))$形状约到x=2时线性上升到0，随后水平\\
+\textbf{LogSoftmax代价函数}：$\log(softmax(x))$linear形状，不经过(0, 0)\\
+\textbf{cross entropy}：代价函数
 
   定义：分部p\ 和\ 分部q\ 间的\ cross entropy $H(p, q) = -E_p(\log (q))$。为\ expected value of $log (q)$ with respect to distribution p
+  
+  \quad 针对单类别classification：$CELoss(x, target\_class) = -\log(\frac{\exp(x_{target\_class})}{\sum \exp(x)})$
+
+  \quad \quad \textbf{即-LogSoftmax}\\
+\textbf{categorical cross entropy}
 
   公式：对一样本的输出$\hat{y}^{(i)}$, $H(y^{(i)}, \hat{y}^{(i)}) = -\frac{1}{n}\sum_{j < n}y^{(i)}_jlog(\hat{y}^{(i)}_j)$
 
@@ -123,7 +136,7 @@
   \quad 仍可和softmax同时使用，softmax将可能性先转换为正数并和为1，随后使用cross entropy\\
 \textbf{binary cross entropy}
 
-  公式：$H(y, \hat{y}) = -y \space log(\hat{y}) + (1 - y)log(1 - \hat{y})$
+  公式：$H(y, \hat{y}) = -y \space log(\hat{y}) - (1 - y)log(1 - \hat{y})$
 
   \quad $\hat{y}, y$为单一标量
   
@@ -140,8 +153,8 @@
 
   \begin{equation*}
     z_i = \begin{cases}
-      \alpha (x_i - y_i)^2 & \|x_i - y_i\| < 1\\
-      \|x_i - y_i\| - \alpha & otherwise
+      \alpha (x_i - y_i)^2 & |x_i - y_i| < 1\\
+      |x_i - y_i| - \alpha & otherwise
     \end{cases}
   \end{equation*}
 
@@ -156,7 +169,32 @@
 
   \quad 定义$l_n = -w_n\hat{y}_n$，即取c类别的预测输出，乘以c类别权重\ 取负
 
-  对N样本，代价函数为$J = \sum_{n=1}^Nl_n$\\  
+  \begin{equation*}
+    NLLLoss(x, y) = \begin{cases}
+      \sum_{n=1}^Nl_n & reduction=sum\\
+      \sum_{n=1}^N\frac{l_n}{\sum_{n=1}^N w_n} & reduction=mean 
+    \end{cases}
+  \end{equation*}\\
+\textbf{Margin Ranking loss}
+
+  $loss(x, y) = \max(0, -y \cdot (x_1 - x_2) + margin)$
+
+  \quad $x_1, x_2$为两样本到类别centroid的距离\textbf{非两样本的embedding}，y为正代表$x_1$应当大于$x_2$ 常取$\pm 1$\\
+\textbf{Triplet Margin Loss}
+
+  $loss(x_a, x_p, x_n) = \max(0, m + |f(x_a) - f(x_b)| - |f(x_a) - f(x_n)|)$
+
+  即\ 使正样本对$x_a, x_p$距离降为0 负样本对$x_a, x_n$距离高于threshould m\\
+\textbf{Cosine Embedding loss}
+
+  \begin{equation*}
+    loss(x, y) = \begin{cases}
+      1 - cosine(x_1, x_2) & y = 1\\
+      \max(0, cosine(x_1, x_2) - m) & y = -1 
+    \end{cases}
+  \end{equation*}
+  
+  所有$x_i$特征为normalized。即\ 使正样本对$x_1, x_2$点乘接近1 负样本对$x_a, x_n$点乘小于threshould m\\
 \textbf{指数加权移动平均}
 
   $y_t = \gamma y_{t-1}+(1-\gamma)x_t$\\
@@ -1132,7 +1170,9 @@ network with memory：kanerva model，非case by case模型
 
   \textbf{隐藏状态}
 
-  \quad $H_t = O_t \odot tanh(C_t)$\\
+  \quad $H_t = O_t \odot tanh(C_t)$
+
+  输出公式同RNN/GRU不变\\
 \textbf{深度循环神经网络}
 
   包含多个隐藏层的RNN
@@ -1174,7 +1214,9 @@ network with memory：kanerva model，非case by case模型
 
   \quad \quad $O_i = H_iW_{hq} + b_q$
 
-  \quad \quad \quad $H_i = (H_i^{(f)}, H_i^{(b)})$，为正向\ 反向隐藏层的输出concat\\
+  \quad \quad \quad $H_i = (H_i^{(f)}, H_i^{(b)})$，为正向\ 反向隐藏层的输出concat
+  
+  \textbf{双向 + deep RNN：应stack多个双向RNN组成deep bi-RNN，非每一direction为deep RNN}\\
 \textbf{经验总结}
 
   1. 增加一批量中的时间步数有助于提高周期性函数的预测效果
